@@ -4,3 +4,10 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(felk_ble_app)
 
 target_sources(app PRIVATE src/main.c)
+
+target_sources(app PRIVATE
+    src/common.c
+    src/remote.c
+)
+
+zephyr_library_include_directories(library)
