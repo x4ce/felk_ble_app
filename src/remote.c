@@ -140,7 +140,7 @@ static ssize_t cmd_value(struct bt_conn *conn,
 		//Read the received value 
 		uint8_t val = *((uint8_t *)buf);
 
-		if (val) {
+		if (val || (val == 0)) {
 			//Call the application callback function to execute cmd
 			ble_cb.cmd_cb(val);
 		} else {

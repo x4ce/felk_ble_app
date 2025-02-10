@@ -8,6 +8,7 @@ target_sources(app PRIVATE src/main.c)
 target_sources(app PRIVATE
     src/common.c
     src/remote.c
+    src/pwm_f.c
 )
 
 zephyr_library_include_directories(library)
