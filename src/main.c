@@ -14,6 +14,8 @@
 #define         SOL2EXT_NODE            DT_ALIAS(sol2ext)
 #define         BLDC_NODE               DT_ALIAS(bldc)
 
+uint16_t adc_data[3] = {0};
+
 static const struct gpio_dt_spec sol1 = GPIO_DT_SPEC_GET(SOL1_NODE, gpios);
 static const struct gpio_dt_spec sol1ext = GPIO_DT_SPEC_GET(SOL1EXT_NODE, gpios);
 static const struct gpio_dt_spec sol2 = GPIO_DT_SPEC_GET(SOL2_NODE, gpios);
@@ -95,9 +97,12 @@ static void app_cmd_cb(uint8_t cmd)
 
 }
 
-static uint16_t app_data_cb (void)
+static uint16_t app_data_cb(void)
 {
-	return 0xf0f0;//read_adc();
+        adc_data[0] = read_adc(0);
+        adc_data[1] = read_adc(4);
+        adc_data[2] = read_adc(5);
+        return 0xff;
 }
 
 static struct felk_ble_cb app_callbacks = {
@@ -110,6 +115,14 @@ int main(void)
         int ret;
 
         ret = pwms_init();
+
+        ret = bluetooth_init();
+	if (ret)
+	{
+                printk("BLE Service failed to initialize!\r\n");
+		return 7;
+	}
+
         if (ret)
         {
                 printk("Error: PWM initialization failed!\r\n");
@@ -158,31 +171,24 @@ int main(void)
 
         ret = felk_ble_init(&app_callbacks);
 
-        ret = bluetooth_init();
-	if (ret)
-	{
-                printk("BLE Service failed to initialize!\r\n");
-		return 7;
-	}
-
         printk("BLE Service successfully initialized!\r\n");
 
         adc_init();
         
         while (1)
         {
-                read_adc(0);
-                k_msleep(2000);
-                read_adc(2);
-                k_msleep(2000);
-                read_adc(4);
-                k_msleep(2000);
-                read_adc(5);
-                k_msleep(2000);
-                read_adc(6);
-                k_msleep(2000);
-                read_adc(7);
-                k_msleep(2000);
+                // read_adc(0);
+                // k_msleep(2000);
+                // read_adc(2);
+                // k_msleep(2000);
+                // read_adc(4);
+                // k_msleep(2000);
+                // read_adc(5);
+                // k_msleep(2000);
+                // read_adc(6);
+                // k_msleep(2000);
+                // read_adc(7);
+                // k_msleep(2000);
         }
         return 0;
 }

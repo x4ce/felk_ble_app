@@ -3,7 +3,8 @@
 
 extern uint16_t adc_val;
 
-static uint16_t bt_read_data;
+static uint16_t bt_read_data[3];
+extern uint16_t adc_data[3];
 
 struct bt_conn *my_conn = NULL;
 
@@ -105,13 +106,16 @@ static ssize_t read_value(struct bt_conn *conn,
 			  uint16_t offset)
 {
 	//get a pointer to bt_read_data which is passed in the BT_GATT_CHARACTERISTIC() and stored in attr->user_data
-	const uint16_t *value = attr->user_data;
+	const uint64_t *value = attr->user_data;
 
 	printk("Attribute read, handle: %u, conn: %p \n", attr->handle, (void *)conn);
 
     if (ble_cb.data_cb) {
 		// Call the application callback function to update the get the current value of the button
-		bt_read_data = 0xf0f0;//ble_cb.data_cb;//read_adc();
+		ble_cb.data_cb();//read_adc();
+		bt_read_data[0] = adc_data[0];
+		bt_read_data[1] = adc_data[1];
+		bt_read_data[2] = adc_data[2];
 		return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
 					 sizeof(*value));
 	}
