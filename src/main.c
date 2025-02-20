@@ -6,6 +6,7 @@
 #include "common.h"
 #include "remote.h"
 #include "pwm_f.h"
+#include "adc_f.h"
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -158,17 +159,29 @@ int main(void)
         ret = felk_ble_init(&app_callbacks);
 
         ret = bluetooth_init();
-	if (!ret)
+	if (ret)
 	{
-                printk("BLE Service successfully initialized!\r\n");
+                printk("BLE Service failed to initialize!\r\n");
 		return 7;
 	}
 
+        printk("BLE Service successfully initialized!\r\n");
+
+        adc_init();
         
-
-
         while (1)
         {
+                read_adc(0);
+                k_msleep(2000);
+                read_adc(2);
+                k_msleep(2000);
+                read_adc(4);
+                k_msleep(2000);
+                read_adc(5);
+                k_msleep(2000);
+                read_adc(6);
+                k_msleep(2000);
+                read_adc(7);
                 k_msleep(2000);
         }
         return 0;
