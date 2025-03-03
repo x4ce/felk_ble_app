@@ -1,5 +1,7 @@
 #include "pwm_f.h"
 
+uint8_t pwm_ch1_dc;
+
 static const struct pwm_dt_spec pwm_sol3 = PWM_DT_SPEC_GET(DT_NODELABEL(pwm_sol3));
 static const struct pwm_dt_spec pwm_buzz = PWM_DT_SPEC_GET(DT_NODELABEL(pwm_buzz));
 
@@ -60,6 +62,7 @@ int pwm_set_dc(uint8_t ch, uint8_t duty)
             printk("Error: Failed to set pulse width!\n");
             return 37;
         }
+        pwm_ch1_dc = duty;
     }
     else if (ch == 2)
     {

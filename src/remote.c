@@ -5,6 +5,7 @@ extern uint16_t adc_val;
 
 static uint16_t bt_read_data[3];
 extern uint16_t adc_data[3];
+static uint16_t bt_read_status;
 
 struct bt_conn *my_conn = NULL;
 
@@ -156,6 +157,27 @@ static ssize_t cmd_value(struct bt_conn *conn,
 	return len;
 }
 
+static ssize_t read_status(struct bt_conn *conn,
+			  const struct bt_gatt_attr *attr,
+			  void *buf,
+			  uint16_t len,
+			  uint16_t offset)
+{
+	//get a pointer to bt_read_data which is passed in the BT_GATT_CHARACTERISTIC() and stored in attr->user_data
+	const uint16_t *value = attr->user_data;
+
+	printk("Attribute read, handle: %u, conn: %p \n", attr->handle, (void *)conn);
+
+    if (ble_cb.status_cb) {
+		// Call the application callback function to update the get the current value of the button
+		bt_read_status = ble_cb.status_cb();
+		return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
+					 sizeof(*value));
+	}
+
+	return 0;
+}
+
 static void felk_ccc_sensor_cfg_changed(const struct bt_gatt_attr *attr,
 				  uint16_t value)
 {
@@ -179,6 +201,7 @@ int felk_ble_init(struct felk_ble_cb *callbacks)
 	if (callbacks) {
 		ble_cb.cmd_cb = callbacks->cmd_cb;
 		ble_cb.data_cb = callbacks->data_cb;
+		ble_cb.status_cb = callbacks->status_cb;
 	}
 
 	return 0;
@@ -241,6 +264,18 @@ BT_GATT_PRIMARY_SERVICE(BT_UUID_FELK),
 			       BT_GATT_CHRC_WRITE,
 			       BT_GATT_PERM_WRITE,
 			       NULL, cmd_value, NULL),
+
+/* Characteristic for reading ADC value */
+	BT_GATT_CHARACTERISTIC(BT_UUID_FELK_ST,
+					BT_GATT_CHRC_READ | BT_GATT_CHRC_INDICATE,
+					BT_GATT_PERM_READ, read_status, NULL,
+					&bt_read_status),
+/* Client Characteristic Configurator Declaration */
+
+	BT_GATT_CCC(read_ccc_cfg_changed,
+					 BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+
+/* Characteristic for reading sensor value */
 	BT_GATT_CHARACTERISTIC(BT_UUID_FELK_SENSOR,
 			       BT_GATT_CHRC_NOTIFY,
 			       BT_GATT_PERM_NONE, NULL, NULL,

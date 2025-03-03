@@ -2,6 +2,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/sys/printk.h>
+#include <hal/nrf_gpio.h>
 
 #include "common.h"
 #include "remote.h"
@@ -9,8 +10,9 @@
 #include "adc_f.h"
 
 #define         STACKSIZE               2048
-#define         ADC_THREAD_PRIORITY     6
-#define         ADC_SLEEP_TIME          500
+#define         EXE_THREAD_PRIORITY     6
+#define         TRIG_THREAD_PRIORITY    7
+#define         EXE_SLEEP_TIME          1000
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -22,47 +24,10 @@
 #define         CR1_THRESHOLD           300
 #define         CR2_THRESHOLD           300
 
+extern uint8_t pwm_ch1_dc;
 uint16_t adc_data[3] = {0};
+bool auto_mode = true;
 
-static void timer0_handler(struct k_timer *timer_id)
-{
-        printk("Timer 0 fired!\r\n");
-        // Acquire ADC data
-        adc_data[0] = read_adc(6);      // Battery
-        adc_data[1] = read_adc(4);      // CR1
-        adc_data[2] = read_adc(5);      // CR2
-        printk("ADC 0: %d, ADC 4: %d, ADC 5: %d\r\n", adc_data[0], adc_data[1], adc_data[2]);
-
-        if (adc_data[0] > VBAT_THRESHOLD)
-        {
-                printk("Battery Power detected!\r\n");
-        }
-        else
-        {
-                printk("Battery Power not detected!\r\n");
-        }
-
-        if (adc_data[1] > CR1_THRESHOLD)
-        {
-                printk("CR1 Power detected!\r\n");
-        }
-        else
-        {
-                printk("CR1 Power not detected!\r\n");
-        }
-
-        if (adc_data[2] > CR2_THRESHOLD)
-        {
-                printk("CR2 Power detected!\r\n");
-        }
-        else
-        {
-                printk("CR2 Power not detected!\r\n");
-        }
-
-}
-
-static K_TIMER_DEFINE(timer0, timer0_handler, NULL);
 
 static const struct gpio_dt_spec sol1 = GPIO_DT_SPEC_GET(SOL1_NODE, gpios);
 static const struct gpio_dt_spec sol1ext = GPIO_DT_SPEC_GET(SOL1EXT_NODE, gpios);
@@ -77,6 +42,15 @@ static void app_cmd_cb(uint8_t cmd)
         tmp = cmd & 0x80;
         if (tmp == 0)
         {
+                tmp = cmd & 0x20;
+                if (tmp == 0x20)
+                {
+                        auto_mode = false;
+                }
+                else
+                {
+                        auto_mode = true;
+                }
                 tmp = cmd & 0x10;
                 if (tmp == 0x10)
                 {
@@ -133,6 +107,8 @@ static void app_cmd_cb(uint8_t cmd)
                         gpio_pin_set_dt(&sol1ext, 0);
                         gpio_pin_set_dt(&sol2, 0);
                         gpio_pin_set_dt(&sol2ext, 0);
+                        gpio_pin_set_dt(&bldc, 0);
+                        auto_mode = true;
                 }
         } else if (tmp == 0x80)
         {
@@ -153,9 +129,53 @@ static uint16_t app_data_cb(void)
         return 0xff;
 }
 
+static uint16_t app_status_cb(void)
+{
+        uint8_t tmpL = 0;
+        uint8_t tmpH = 0;
+        if (auto_mode)
+        {
+                tmpL |= 0x20;
+        }
+        if (nrf_gpio_pin_out_read(bldc.pin))
+        {
+                tmpL |= 0x10;
+        }
+
+        if (nrf_gpio_pin_out_read(sol1.pin))
+        {
+                tmpL |= 0x08;
+        }
+
+        if (nrf_gpio_pin_out_read(sol1ext.pin))
+        {
+                tmpL |= 0x04;
+        }
+        
+        if (nrf_gpio_pin_out_read(sol2.pin))
+        {
+                tmpL |= 0x02;
+        }
+
+        if (nrf_gpio_pin_out_read(sol2ext.pin))
+        {
+                tmpL |= 0x01;
+        }
+
+        if (pwm_ch1_dc > 0 && pwm_ch1_dc <= 100)
+        {
+                tmpH |= 0x80;
+                tmpH |= ((pwm_ch1_dc) & 0x7F);
+        }
+
+
+        return (tmpH << 8) | tmpL;
+}
+
 static struct felk_ble_cb app_callbacks = {
 	.cmd_cb = app_cmd_cb,
 	.data_cb = app_data_cb,
+        .status_cb = app_status_cb,
 };
 
 int main(void)
@@ -163,6 +183,8 @@ int main(void)
         int ret;
 
         ret = pwms_init();
+        // Set initial PWM duty cycle to 70%
+        //pwm_set_dc(1, 70);
 
         ret = bluetooth_init();
 	if (ret)
@@ -224,16 +246,21 @@ int main(void)
         adc_init();
         
         // Start timer 0 once every 0.5 seconds
-        k_timer_start(&timer0, K_MSEC(500), K_MSEC(500));
+        // k_timer_start(&timer0, K_MSEC(500), K_MSEC(500));
 
         return 0;
 }
 
-static void adc_thread_func(void *unused1, void *unused2, void *unused3)
+static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 {
         ARG_UNUSED(unused1);
         ARG_UNUSED(unused2);
         ARG_UNUSED(unused3);
+
+        int ret;
+        bool vbat_state = false;
+        bool cr1_state = false;
+        bool cr2_state = false;
 
         while (1)
         {
@@ -243,8 +270,105 @@ static void adc_thread_func(void *unused1, void *unused2, void *unused3)
                 adc_data[1] = read_adc(4);      // CR1
                 adc_data[2] = read_adc(5);      // CR2
                 printk("ADC 6: %d, ADC 4: %d, ADC 5: %d\r\n", adc_data[0], adc_data[1], adc_data[2]);
-                k_sleep(K_MSEC(ADC_SLEEP_TIME));
+              
+                if (auto_mode)
+                {
+                        if (adc_data[0] > VBAT_THRESHOLD)
+                        {
+                                printk("Battery Power detected!\n");
+                                vbat_state = true;
+                        }
+                        else
+                        {
+                                printk("Battery Power not detected!\n");
+                                vbat_state = false;
+                        }       
+
+                        if (adc_data[1] > CR1_THRESHOLD)
+                        {
+                                printk("CR1 Power detected!\n");
+                                if (!cr1_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol2ext, 1);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                        }
+
+                                        ret = gpio_pin_set_dt(&bldc, 1);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                        }
+                                }
+                                cr1_state = true;
+                        }
+                        else
+                        {
+                                printk("CR1 Power not detected!\n");
+                                if (cr1_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol2ext, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                        }
+                                        
+                                        k_msleep(2000);
+                                        
+                                        ret = gpio_pin_set_dt(&bldc, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                        }
+                                }
+                                cr1_state = false;
+                        }
+
+                        if (adc_data[2] > CR2_THRESHOLD)
+                        {
+                                printk("CR2 Power detected!\n");
+                                if (!cr2_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol1ext, 1);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                        }
+
+                                        ret = gpio_pin_set_dt(&bldc, 1);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                        }
+                                }
+                                cr2_state = true;
+                        }
+                        else
+                        {
+                                printk("CR2 Power not detected!\n");
+                                if (cr2_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol1ext, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                        }
+                                        
+                                        k_msleep(2000);
+                                        
+                                        ret = gpio_pin_set_dt(&bldc, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                        }
+                                }
+                                cr2_state = false;
+                        }
+                }
+
+                k_sleep(K_MSEC(EXE_SLEEP_TIME));
         }
 }
 
-K_THREAD_DEFINE(adc_thread_id, STACKSIZE, adc_thread_func, NULL, NULL, NULL, ADC_THREAD_PRIORITY, 0, 0);
+K_THREAD_DEFINE(exe_thread_id, STACKSIZE, exe_thread_func, NULL, NULL, NULL, EXE_THREAD_PRIORITY, 0, 0);

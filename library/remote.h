@@ -25,13 +25,18 @@
 #define BT_UUID_FELK_RX_VAL \
 	BT_UUID_128_ENCODE(0x5337b1b3, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
 
-/** @brief LED Characteristic UUID. */
-#define BT_UUID_FELK_SENSOR_VAL \
+/** @brief ST Characteristic UUID. */
+#define BT_UUID_FELK_ST_VAL \
 	BT_UUID_128_ENCODE(0x5337b1b4, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
+
+/** @brief SEN Characteristic UUID. */
+#define BT_UUID_FELK_SENSOR_VAL \
+	BT_UUID_128_ENCODE(0x5337b1b5, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
 
 #define BT_UUID_FELK			BT_UUID_DECLARE_128(BT_UUID_FELK_VAL)
 #define BT_UUID_FELK_TX     	BT_UUID_DECLARE_128(BT_UUID_FELK_TX_VAL)
 #define BT_UUID_FELK_RX     	BT_UUID_DECLARE_128(BT_UUID_FELK_RX_VAL)
+#define BT_UUID_FELK_ST     	BT_UUID_DECLARE_128(BT_UUID_FELK_ST_VAL)
 #define BT_UUID_FELK_SENSOR		BT_UUID_DECLARE_128(BT_UUID_FELK_SENSOR_VAL)
 
 /** @brief Callback type for when an byte is received. */
@@ -40,12 +45,17 @@ typedef void (*cmd_cb_t)(const uint8_t cmd);
 /** @brief Callback type for when the data is pulled. */
 typedef uint16_t (*data_cb_t)(void);
 
+/** @brief Callback type for when the data is pulled. */
+typedef uint16_t (*status_cb_t)(void);
+
 /** @brief Callback struct used by the Felk BLE Service. */
 struct felk_ble_cb {
 	/** cmd callback. */
 	cmd_cb_t cmd_cb;
 	/** read data callback. */
 	data_cb_t data_cb;
+	/** read status callback. */
+	status_cb_t status_cb;
 };
 
 /** @brief Initialize the LBS Service.
