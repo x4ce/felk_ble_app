@@ -12,7 +12,7 @@
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
 #define         TRIG_THREAD_PRIORITY    7
-#define         EXE_SLEEP_TIME          1000
+#define         EXE_SLEEP_TIME          100
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -21,8 +21,10 @@
 #define         BLDC_NODE               DT_ALIAS(bldc)
 
 #define         VBAT_THRESHOLD          10000
-#define         CR1_THRESHOLD           300
-#define         CR2_THRESHOLD           300
+#define         CR1_THRESHOLD_L         300
+#define         CR1_THRESHOLD_H         14000
+#define         CR2_THRESHOLD_L         300
+#define         CR2_THRESHOLD_H         14000
 
 extern uint8_t pwm_ch1_dc;
 uint16_t adc_data[3] = {0};
@@ -284,7 +286,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 vbat_state = false;
                         }       
 
-                        if (adc_data[1] > CR1_THRESHOLD)
+                        if ((adc_data[1] > CR1_THRESHOLD_L) && (adc_data[1] < CR1_THRESHOLD_H))
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -325,7 +327,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 cr1_state = false;
                         }
 
-                        if (adc_data[2] > CR2_THRESHOLD)
+                        if ((adc_data[2] > CR2_THRESHOLD_L) && (adc_data[2] < CR2_THRESHOLD_H))
                         {
                                 printk("CR2 Power detected!\n");
                                 if (!cr2_state)
