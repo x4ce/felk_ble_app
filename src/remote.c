@@ -1,10 +1,13 @@
 #include "remote.h"
 #include "common.h"
 
+#define         ADC_NO_CH               6
+
 extern uint16_t adc_val;
 
 static uint16_t bt_read_data[3];
-extern uint16_t adc_data[3];
+static uint16_t bt_read_data2[2];
+extern uint16_t adc_data[ADC_NO_CH];
 static uint16_t bt_read_status;
 
 struct bt_conn *my_conn = NULL;
@@ -113,12 +116,36 @@ static ssize_t read_value(struct bt_conn *conn,
 
     if (ble_cb.data_cb) {
 		// Call the application callback function to update the get the current value of the button
-		ble_cb.data_cb();//read_adc();
+		//ble_cb.data_cb();//read_adc();
 		bt_read_data[0] = adc_data[0];
 		bt_read_data[1] = adc_data[1];
 		bt_read_data[2] = adc_data[2];
 		return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
 					 sizeof(*value));
+	}
+
+	return 0;
+}
+
+static ssize_t read_value2(struct bt_conn *conn,
+				const struct bt_gatt_attr *attr,
+				void *buf,
+				uint16_t len,
+				uint16_t offset)
+{
+	//get a pointer to bt_read_data which is passed in the BT_GATT_CHARACTERISTIC() and stored in attr->user_data
+	const uint32_t *value = attr->user_data;
+
+	printk("Attribute read, handle: %u, conn: %p \n", attr->handle, (void *)conn);
+
+	if (ble_cb.data_cb) {
+	// Call the application callback function to update the get the current value of the button
+	//ble_cb.data_cb();//read_adc();
+	bt_read_data2[0] = adc_data[3];
+	bt_read_data2[1] = adc_data[4];
+	
+	return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
+			sizeof(*value));
 	}
 
 	return 0;
@@ -284,6 +311,14 @@ BT_GATT_PRIMARY_SERVICE(BT_UUID_FELK),
 	BT_GATT_CCC(felk_ccc_sensor_cfg_changed,
 		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
 				   
+/* Characteristic for reading sensor value */
+	BT_GATT_CHARACTERISTIC(BT_UUID_FELK_SENSORS,
+					BT_GATT_CHRC_READ | BT_GATT_CHRC_INDICATE,
+					BT_GATT_PERM_READ, read_value2, NULL,
+					&bt_read_data2),
+
+	BT_GATT_CCC(read_ccc_cfg_changed,
+			BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
 );
 
 int read_val_indicate(uint16_t val)

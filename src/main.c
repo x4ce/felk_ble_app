@@ -3,6 +3,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/sys/printk.h>
 #include <hal/nrf_gpio.h>
+#include <math.h>
 
 #include "common.h"
 #include "remote.h"
@@ -12,7 +13,7 @@
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
 #define         TRIG_THREAD_PRIORITY    7
-#define         EXE_SLEEP_TIME          500
+#define         EXE_SLEEP_TIME          1000
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -20,14 +21,17 @@
 #define         SOL2EXT_NODE            DT_ALIAS(sol2ext)
 #define         BLDC_NODE               DT_ALIAS(bldc)
 
+#define         ADC_NO_CH               6
 #define         VBAT_THRESHOLD          10000
 #define         CR1_THRESHOLD_L         300
 #define         CR1_THRESHOLD_H         14000
 #define         CR2_THRESHOLD_L         300
 #define         CR2_THRESHOLD_H         14000
 
+#define         RTD_RBIAS               10000
+
 extern uint8_t pwm_ch1_dc;
-uint16_t adc_data[3] = {0};
+uint16_t adc_data[ADC_NO_CH] = {0};
 bool auto_mode = true;
 
 
@@ -271,8 +275,21 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 adc_data[0] = read_adc(6);      // Battery
                 adc_data[1] = read_adc(4);      // CR1
                 adc_data[2] = read_adc(5);      // CR2
-                printk("ADC 6: %d, ADC 4: %d, ADC 5: %d\r\n", adc_data[0], adc_data[1], adc_data[2]);
-              
+                adc_data[3] = read_adc(2);      // Pressure
+                adc_data[4] = read_adc(7);      // Temperature NTC
+                adc_data[5] = read_adc(0);      // VDD
+                
+                // Obtain Rth and temperature
+                float rth = RTD_RBIAS * (((float)adc_data[5] / (float)adc_data[4]) - 1);
+                //printk("R Thermistor: %d \r\n", (int32_t)(rth * 10));
+                float tK = (3950.0 * 298.15) / (3950 + (298.15 * log(rth / 10000)));
+                float tC = tK - 273.15;
+                //printk("Temperature: %d \r\n", (int32_t)(tC * 10));
+                adc_data[4] = (uint16_t)(tC*10); 
+
+                printk("ADC 6: %d, ADC 4: %d, ADC 5: %d, ADC 2: %d, ADC 7: %d, VDD: %d \r\n", adc_data[0], adc_data[1], adc_data[2], adc_data[3], adc_data[4], adc_data[5]);
+
+
                 if (auto_mode)
                 {
                         if (adc_data[0] > VBAT_THRESHOLD)
