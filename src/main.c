@@ -13,7 +13,7 @@
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
 #define         TRIG_THREAD_PRIORITY    7
-#define         EXE_SLEEP_TIME          1000
+#define         EXE_SLEEP_TIME          5000
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -280,11 +280,12 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 adc_data[5] = read_adc(0);      // VDD
                 
                 // Obtain Rth and temperature
-                float rth = RTD_RBIAS * (((float)adc_data[5] / (float)adc_data[4]) - 1);
-                //printk("R Thermistor: %d \r\n", (int32_t)(rth * 10));
+                //float rth = RTD_RBIAS * ((1024 / (1024.0 - (float)adc_data[4])) - 1);
+                float rth = RTD_RBIAS * ((adc_data[5] / (float)adc_data[4]) - 1);
+                printk("R Thermistor: %d \r\n", (int32_t)(rth * 10));
                 float tK = (3950.0 * 298.15) / (3950 + (298.15 * log(rth / 10000)));
                 float tC = tK - 273.15;
-                //printk("Temperature: %d \r\n", (int32_t)(tC * 10));
+                printk("Temperature: %d \r\n", (int32_t)(tC * 10));
                 adc_data[4] = (uint16_t)(tC*10); 
 
                 printk("ADC 6: %d, ADC 4: %d, ADC 5: %d, ADC 2: %d, ADC 7: %d, VDD: %d \r\n", adc_data[0], adc_data[1], adc_data[2], adc_data[3], adc_data[4], adc_data[5]);

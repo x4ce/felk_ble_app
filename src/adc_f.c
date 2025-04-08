@@ -118,14 +118,14 @@ uint16_t read_adc(uint8_t ch)
                 val_mv = (int32_t)buf;
             }
         
-            printk("%"PRId32, val_mv);
-            err = adc_raw_to_millivolts_dt(&adc_ch0, &val_mv);
+            printk("%"PRId32"\n", val_mv);
+            // err = adc_raw_to_millivolts_dt(&adc_ch0, &val_mv);
             
-            if (err < 0) {
-                printk(" (value in mV not available)\n");
-            } else {
-                printk(" = %"PRId32" mV\n", val_mv);
-            }
+            // if (err < 0) {
+            //     printk(" (value in mV not available)\n");
+            // } else {
+            //     printk(" = %"PRId32" mV\n", val_mv);
+            // }
             break;
         case 2:
             printk("ADC reading of device %s, channel %d: ", 
@@ -260,16 +260,16 @@ uint16_t read_adc(uint8_t ch)
                 }
             }
             val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
-            printk("%"PRId32, val_mv);
-            err = adc_raw_to_millivolts_dt(&adc_ch7, &val_mv);
+            printk("%"PRId32"\n", val_mv);
+            // err = adc_raw_to_millivolts_dt(&adc_ch7, &val_mv);
         
-            val_mv = (int32_t)(val_mv * CH7_ADC_MF);
+            // val_mv = (int32_t)(val_mv * CH7_ADC_MF);
 
-            if (err < 0) {
-                printk(" (value in mV not available)\n");
-            } else {
-                printk(" = %"PRId32" mV\n", val_mv);
-            }
+            // if (err < 0) {
+            //     printk(" (value in mV not available)\n");
+            // } else {
+            //     printk(" = %"PRId32" mV\n", val_mv);
+            // }
             break;
         default:
             printk("Invalid channel\n");
