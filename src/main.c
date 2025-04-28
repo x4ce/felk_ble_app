@@ -281,7 +281,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 
                 // Obtain Rth and temperature
                 //float rth = RTD_RBIAS * ((1024 / (1024.0 - (float)adc_data[4])) - 1);
-                float rth = RTD_RBIAS * ((adc_data[5] / (float)adc_data[4]) - 1);
+                float rth = RTD_RBIAS * ((1023.0/ (float)(adc_data[4] * 1.5)) - 1);
                 printk("R Thermistor: %d \r\n", (int32_t)(rth * 10));
                 float tK = (3950.0 * 298.15) / (3950 + (298.15 * log(rth / 10000)));
                 float tC = tK - 273.15;
