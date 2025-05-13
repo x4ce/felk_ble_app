@@ -6,7 +6,7 @@
 extern uint16_t adc_val;
 
 static uint16_t bt_read_data[3];
-static uint16_t bt_read_data2[2];
+static uint16_t bt_read_data2[3];
 extern uint16_t adc_data[ADC_NO_CH];
 static uint16_t bt_read_status;
 
@@ -134,7 +134,7 @@ static ssize_t read_value2(struct bt_conn *conn,
 				uint16_t offset)
 {
 	//get a pointer to bt_read_data which is passed in the BT_GATT_CHARACTERISTIC() and stored in attr->user_data
-	const uint32_t *value = attr->user_data;
+	const uint64_t *value = attr->user_data;
 
 	printk("Attribute read, handle: %u, conn: %p \n", attr->handle, (void *)conn);
 
@@ -143,6 +143,7 @@ static ssize_t read_value2(struct bt_conn *conn,
 	//ble_cb.data_cb();//read_adc();
 	bt_read_data2[0] = adc_data[3];
 	bt_read_data2[1] = adc_data[4];
+	bt_read_data2[2] = adc_data[6];
 	
 	return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
 			sizeof(*value));

@@ -1,6 +1,7 @@
 #include "adc_f.h"
 
-#define         CH2_ADC_DF           1.5        // Pressure Sensor
+#define         CH2_ADC_MF           1.5      // Pressure Sensor
+#define         CH3_ADC_MF           1        // Battery/ Pressure Sensor
 #define         CH4_ADC_MF           8.5      // CR1: 10k/(75k+10k) = 0.117 ~= 1/8.5
 #define         CH5_ADC_MF           8.5      // CR2: 10k/(75k+10k) = 0.117 ~= 1/8.5
 #define         CH6_ADC_MF           8.5      // Bat: 10k/(75k+10k) = 0.117 ~= 1/8.5   
@@ -20,10 +21,11 @@ struct adc_sequence sequence = {
 
 static const struct adc_dt_spec adc_ch0 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0);
 static const struct adc_dt_spec adc_ch2 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 1);
-static const struct adc_dt_spec adc_ch4 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2);
-static const struct adc_dt_spec adc_ch5 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 3);
-static const struct adc_dt_spec adc_ch6 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 4);
-static const struct adc_dt_spec adc_ch7 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 5);
+static const struct adc_dt_spec adc_ch3 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2);
+static const struct adc_dt_spec adc_ch4 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 3);
+static const struct adc_dt_spec adc_ch5 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 4);
+static const struct adc_dt_spec adc_ch6 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 5);
+static const struct adc_dt_spec adc_ch7 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 6);
 
 void adc_init(void)
 {
@@ -51,6 +53,17 @@ void adc_init(void)
         printk("Could not setup channel #3 (%d)\n", err);
     }
 
+    if (!device_is_ready(adc_ch3.dev))
+    {
+    printk("ADC controller device %s not ready\n", adc_ch3.dev->name);
+    }
+
+    err = adc_channel_setup_dt(&adc_ch3);
+    if (err <0)
+    {
+        printk("Could not setup channel #4 (%d)\n", err);
+    }
+    
     if (!device_is_ready(adc_ch4.dev))
     {
     printk("ADC controller device %s not ready\n", adc_ch4.dev->name);
@@ -147,7 +160,7 @@ uint16_t read_adc(uint8_t ch)
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch2, &val_mv);
             
-            val_mv = (int32_t)(val_mv / CH2_ADC_DF);
+            val_mv = (int32_t)(val_mv / CH2_ADC_MF);
 
             if (err < 0) {
                 printk(" (value in mV not available)\n");
@@ -155,6 +168,41 @@ uint16_t read_adc(uint8_t ch)
                 printk(" = %"PRId32" mV\n", val_mv);
             }
             break;
+
+            case 3:
+            printk("ADC reading of device %s, channel %d: ", 
+                adc_ch3.dev->name, adc_ch3.channel_id);
+            (void)adc_sequence_init_dt(&adc_ch3, &sequence);
+            for (i = 0; i < ADC_MEAS_NO; i++)
+            {
+                err = adc_read(adc_ch3.dev, &sequence);
+                k_msleep(ADC_MEAS_INT);
+                if (err <0)
+                {
+                    printk("Could not read (%d)\n", err);
+                } else {
+                    tmp_buf += (int32_t)buf;
+                }
+            }
+            val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+        
+            printk("%"PRId32, val_mv);
+            err = adc_raw_to_millivolts_dt(&adc_ch3, &val_mv);
+        
+            val_mv = (int32_t)(val_mv * CH3_ADC_MF);
+
+            if (val_mv > 50000)
+            {
+                val_mv = 0;
+            }
+
+            if (err < 0) {
+                printk(" (value in mV not available)\n");
+            } else {
+                printk(" = %"PRId32" mV\n", val_mv);
+            }
+            break;
+
         case 4:
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch4.dev->name, adc_ch4.channel_id);
@@ -188,6 +236,7 @@ uint16_t read_adc(uint8_t ch)
                 printk(" = %"PRId32" mV\n", val_mv);
             }
             break;
+
         case 5:
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch5.dev->name, adc_ch5.channel_id);

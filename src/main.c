@@ -21,7 +21,7 @@
 #define         SOL2EXT_NODE            DT_ALIAS(sol2ext)
 #define         BLDC_NODE               DT_ALIAS(bldc)
 
-#define         ADC_NO_CH               6
+#define         ADC_NO_CH               7
 #define         VBAT_THRESHOLD          10000
 #define         CR1_THRESHOLD_L         300
 #define         CR1_THRESHOLD_H         14000
@@ -278,6 +278,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 adc_data[3] = read_adc(2);      // Pressure
                 adc_data[4] = read_adc(7);      // Temperature NTC
                 adc_data[5] = read_adc(0);      // VDD
+                adc_data[6] = read_adc(3);      // Battery/ Pressure
                 
                 // Obtain Rth and temperature
                 //float rth = RTD_RBIAS * ((1024 / (1024.0 - (float)adc_data[4])) - 1);
