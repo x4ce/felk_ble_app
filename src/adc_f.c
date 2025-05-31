@@ -145,18 +145,28 @@ uint16_t read_adc(uint8_t ch)
                 adc_ch2.dev->name, adc_ch2.channel_id);
             (void)adc_sequence_init_dt(&adc_ch2, &sequence);
             
-            for (i = 0; i < ADC_MEAS_NO; i++)
-            {
-                err = adc_read(adc_ch2.dev, &sequence);
-                k_msleep(ADC_MEAS_INT);
-                if (err <0)
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch2.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+            
+            err = adc_read(adc_ch2.dev, &sequence);
+            if (err <0)
                 {
                     printk("Could not read (%d)\n", err);
                 } else {
-                    tmp_buf += (int32_t)buf;
+                    val_mv = (int32_t)buf;
                 }
-            }
-            val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+            
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch2, &val_mv);
             
@@ -173,18 +183,26 @@ uint16_t read_adc(uint8_t ch)
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch3.dev->name, adc_ch3.channel_id);
             (void)adc_sequence_init_dt(&adc_ch3, &sequence);
-            for (i = 0; i < ADC_MEAS_NO; i++)
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch3.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+
+            err = adc_read(adc_ch3.dev, &sequence);
+            if (err <0)
             {
-                err = adc_read(adc_ch3.dev, &sequence);
-                k_msleep(ADC_MEAS_INT);
-                if (err <0)
-                {
-                    printk("Could not read (%d)\n", err);
-                } else {
-                    tmp_buf += (int32_t)buf;
-                }
+                printk("Could not read (%d)\n", err);
+            } else {
+                val_mv = (int32_t)buf;
             }
-            val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
         
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch3, &val_mv);
@@ -207,19 +225,27 @@ uint16_t read_adc(uint8_t ch)
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch4.dev->name, adc_ch4.channel_id);
             (void)adc_sequence_init_dt(&adc_ch4, &sequence);
-            for (i = 0; i < ADC_MEAS_NO; i++)
-            {
-                err = adc_read(adc_ch4.dev, &sequence);
-                k_msleep(ADC_MEAS_INT);
-                if (err <0)
-                {
-                    printk("Could not read (%d)\n", err);
-                } else {
-                    tmp_buf += (int32_t)buf;
-                }
-            }
-            val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch4.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
         
+            err = adc_read(adc_ch4.dev, &sequence);
+            if (err <0)
+            {
+                printk("Could not read (%d)\n", err);
+            } else {
+                val_mv = (int32_t)buf;
+            }
+
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch4, &val_mv);
         
@@ -241,18 +267,28 @@ uint16_t read_adc(uint8_t ch)
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch5.dev->name, adc_ch5.channel_id);
             (void)adc_sequence_init_dt(&adc_ch5, &sequence);
-            for (i = 0; i < ADC_MEAS_NO; i++)
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch5.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+
+
+            err = adc_read(adc_ch5.dev, &sequence);
+            if (err <0)
             {
-                err = adc_read(adc_ch5.dev, &sequence);
-                k_msleep(ADC_MEAS_INT);
-                if (err <0)
-                {
-                    printk("Could not read (%d)\n", err);
-                } else {
-                    tmp_buf += (int32_t)buf;
-                }
+                printk("Could not read (%d)\n", err);
+            } else {
+                val_mv = (int32_t)buf;
             }
-            val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch5, &val_mv);
         
@@ -273,6 +309,7 @@ uint16_t read_adc(uint8_t ch)
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch6.dev->name, adc_ch6.channel_id);
             (void)adc_sequence_init_dt(&adc_ch6, &sequence);
+            
             err = adc_read(adc_ch6.dev, &sequence);
             if (err <0)
             {
@@ -297,18 +334,27 @@ uint16_t read_adc(uint8_t ch)
                 adc_ch7.dev->name, adc_ch7.channel_id);
             (void)adc_sequence_init_dt(&adc_ch7, &sequence);
             
-            for (i = 0; i < ADC_MEAS_NO; i++)
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch7.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+
+            err = adc_read(adc_ch7.dev, &sequence);
+            if (err <0)
             {
-                err = adc_read(adc_ch7.dev, &sequence);
-                k_msleep(ADC_MEAS_INT);
-                if (err <0)
-                {
-                    printk("Could not read (%d)\n", err);
-                } else {
-                    tmp_buf += (int32_t)buf;
-                }
+                printk("Could not read (%d)\n", err);
+            } else {
+                val_mv = (int32_t)buf;
             }
-            val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+
             printk("%"PRId32"\n", val_mv);
             // err = adc_raw_to_millivolts_dt(&adc_ch7, &val_mv);
         

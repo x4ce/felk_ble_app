@@ -127,6 +127,11 @@ static void app_cmd_cb(uint8_t cmd)
 
 }
 
+static void app_cr_cb(uint16_t crval)
+{
+        printk("Received CR: %d", crval);
+}
+
 static uint16_t app_data_cb(void)
 {
         adc_data[0] = read_adc(6);
@@ -180,6 +185,7 @@ static uint16_t app_status_cb(void)
 
 static struct felk_ble_cb app_callbacks = {
 	.cmd_cb = app_cmd_cb,
+        .cr_cb = app_cr_cb,
 	.data_cb = app_data_cb,
         .status_cb = app_status_cb,
 };

@@ -37,15 +37,23 @@
 #define BT_UUID_FELK_SENSORS_VAL \
 BT_UUID_128_ENCODE(0x5337b1b6, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
 
+/** @brief CR Characteristic UUID. */
+#define BT_UUID_FELK_CR_VAL \
+	BT_UUID_128_ENCODE(0x5337b1b7, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
+
 #define BT_UUID_FELK			BT_UUID_DECLARE_128(BT_UUID_FELK_VAL)
 #define BT_UUID_FELK_TX     	BT_UUID_DECLARE_128(BT_UUID_FELK_TX_VAL)
 #define BT_UUID_FELK_RX     	BT_UUID_DECLARE_128(BT_UUID_FELK_RX_VAL)
 #define BT_UUID_FELK_ST     	BT_UUID_DECLARE_128(BT_UUID_FELK_ST_VAL)
 #define BT_UUID_FELK_SENSOR		BT_UUID_DECLARE_128(BT_UUID_FELK_SENSOR_VAL)
 #define BT_UUID_FELK_SENSORS	BT_UUID_DECLARE_128(BT_UUID_FELK_SENSORS_VAL)
+#define BT_UUID_FELK_CR     	BT_UUID_DECLARE_128(BT_UUID_FELK_CR_VAL)
 
 /** @brief Callback type for when an byte is received. */
 typedef void (*cmd_cb_t)(const uint8_t cmd);
+
+/** @brief Callback type for when an 16 bit CR value is received. */
+typedef void (*cr_cb_t)(const uint16_t crval);
 
 /** @brief Callback type for when the data is pulled. */
 typedef uint16_t (*data_cb_t)(void);
@@ -57,6 +65,8 @@ typedef uint16_t (*status_cb_t)(void);
 struct felk_ble_cb {
 	/** cmd callback. */
 	cmd_cb_t cmd_cb;
+	/** cmd callback. */
+	cr_cb_t cr_cb;
 	/** read data callback. */
 	data_cb_t data_cb;
 	/** read status callback. */

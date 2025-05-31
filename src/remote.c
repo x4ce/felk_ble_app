@@ -185,6 +185,39 @@ static ssize_t cmd_value(struct bt_conn *conn,
 	return len;
 }
 
+static ssize_t cr_value(struct bt_conn *conn,
+			 const struct bt_gatt_attr *attr,
+			 const void *buf,
+			 uint16_t len, uint16_t offset, uint8_t flags)
+{
+	printk("Attribute write, handle: %u, conn: %p \n", attr->handle, (void *)conn);
+
+	if (len != 1U) {
+		printk("Write cmd: Incorrect data length\n");
+		return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
+	}
+
+	if (offset != 0) {
+		printk("Write cmd: Incorrect data offset\n");
+		return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
+	}
+
+	if (ble_cb.cr_cb) {
+		//Read the received value 
+		uint16_t val = *((uint16_t *)buf);
+
+		if (val || (val == 0)) {
+			//Call the application callback function to execute cmd
+			ble_cb.cr_cb(val);
+		} else {
+			printk("Write led: Incorrect value\n");
+			return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
+		}
+	}
+
+	return len;
+}
+
 static ssize_t read_status(struct bt_conn *conn,
 			  const struct bt_gatt_attr *attr,
 			  void *buf,
@@ -228,6 +261,7 @@ int felk_ble_init(struct felk_ble_cb *callbacks)
 {
 	if (callbacks) {
 		ble_cb.cmd_cb = callbacks->cmd_cb;
+		ble_cb.cr_cb = callbacks->cr_cb;
 		ble_cb.data_cb = callbacks->data_cb;
 		ble_cb.status_cb = callbacks->status_cb;
 	}
@@ -320,6 +354,12 @@ BT_GATT_PRIMARY_SERVICE(BT_UUID_FELK),
 
 	BT_GATT_CCC(read_ccc_cfg_changed,
 			BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+
+	/* Characteristic for CR reception */
+	BT_GATT_CHARACTERISTIC(BT_UUID_FELK_CR,
+			       BT_GATT_CHRC_WRITE,
+			       BT_GATT_PERM_WRITE,
+			       NULL, cr_value, NULL),
 );
 
 int read_val_indicate(uint16_t val)
