@@ -192,7 +192,7 @@ static ssize_t cr_value(struct bt_conn *conn,
 {
 	printk("Attribute write, handle: %u, conn: %p \n", attr->handle, (void *)conn);
 
-	if (len != 1U) {
+	if (len != 2U) {
 		printk("Write cmd: Incorrect data length\n");
 		return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	}

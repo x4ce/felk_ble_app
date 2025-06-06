@@ -30,6 +30,8 @@
 
 #define         RTD_RBIAS               10000
 
+uint16_t cr_thresh = 500;
+
 extern uint8_t pwm_ch1_dc;
 uint16_t adc_data[ADC_NO_CH] = {0};
 bool auto_mode = true;
@@ -129,7 +131,8 @@ static void app_cmd_cb(uint8_t cmd)
 
 static void app_cr_cb(uint16_t crval)
 {
-        printk("Received CR: %d", crval);
+        printk("Current CR: %d, Received CR: %d\r\n", cr_thresh, crval);
+        cr_thresh = crval;
 }
 
 static uint16_t app_data_cb(void)
@@ -311,7 +314,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 vbat_state = false;
                         }       
 
-                        if ((adc_data[1] > CR1_THRESHOLD_L) && (adc_data[1] < CR1_THRESHOLD_H))
+                        if ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H))
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -352,7 +355,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 cr1_state = false;
                         }
 
-                        if ((adc_data[2] > CR2_THRESHOLD_L) && (adc_data[2] < CR2_THRESHOLD_H))
+                        if ((adc_data[2] > cr_thresh) && (adc_data[2] < CR2_THRESHOLD_H))
                         {
                                 printk("CR2 Power detected!\n");
                                 if (!cr2_state)
