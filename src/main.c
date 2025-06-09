@@ -13,7 +13,7 @@
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
 #define         TRIG_THREAD_PRIORITY    7
-#define         EXE_SLEEP_TIME          5000
+#define         EXE_SLEEP_TIME          1000
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -21,7 +21,7 @@
 #define         SOL2EXT_NODE            DT_ALIAS(sol2ext)
 #define         BLDC_NODE               DT_ALIAS(bldc)
 
-#define         ADC_NO_CH               7
+#define         ADC_NO_CH               8
 #define         VBAT_THRESHOLD          10000
 #define         CR1_THRESHOLD_L         300
 #define         CR1_THRESHOLD_H         14000
@@ -281,25 +281,46 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
         {
                 printk("ADC Thread fired!\r\n");
                 // Acquire ADC data
-                adc_data[0] = read_adc(6);      // Battery
-                adc_data[1] = read_adc(4);      // CR1
-                adc_data[2] = read_adc(5);      // CR2
-                adc_data[3] = read_adc(2);      // Pressure
-                adc_data[4] = read_adc(7);      // Temperature NTC
-                adc_data[5] = read_adc(0);      // VDD
-                adc_data[6] = read_adc(3);      // Battery/ Pressure
-                
+                // adc_data[0] = read_adc(6);      // Battery
+                // adc_data[1] = read_adc(4);      // CR1
+                // adc_data[2] = read_adc(5);      // CR2
+                // adc_data[3] = read_adc(2);      // Pressure
+                // adc_data[4] = read_adc(7);      // Temperature NTC
+                // adc_data[5] = read_adc(0);      // VDD
+                // adc_data[6] = read_adc(3);      // Battery/ Pressure
+
+                // Acquire ADC data
+                adc_data[0] = read_adc(0);      // Temp PSU
+                adc_data[1] = read_adc(1);      // Internal VDD
+                //adc_data[2] = read_adc(2);      // Pressure +ve
+                //adc_data[3] = read_adc(3);      // Pressure -ve
+                adc_data[4] = read_adc(4);      // CR1
+                adc_data[5] = read_adc(5);      // CR2
+                adc_data[6] = read_adc(6);      // Battery
+                adc_data[7] = read_adc(7);      // Temp Pump
+
+                /* Temperature PSU */
                 // Obtain Rth and temperature
                 //float rth = RTD_RBIAS * ((1024 / (1024.0 - (float)adc_data[4])) - 1);
-                float rth = RTD_RBIAS * ((1023.0/ (float)(adc_data[4] * 1.5)) - 1);
+                float rth = RTD_RBIAS * ((1023.0/ (float)(adc_data[0] * 1.5)) - 1);
                 printk("R Thermistor: %d \r\n", (int32_t)(rth * 10));
                 float tK = (3950.0 * 298.15) / (3950 + (298.15 * log(rth / 10000)));
                 float tC = tK - 273.15;
                 printk("Temperature: %d \r\n", (int32_t)(tC * 10));
                 adc_data[4] = (uint16_t)(tC*10); 
 
-                printk("ADC 6: %d, ADC 4: %d, ADC 5: %d, ADC 2: %d, ADC 7: %d, VDD: %d \r\n", adc_data[0], adc_data[1], adc_data[2], adc_data[3], adc_data[4], adc_data[5]);
+                /* Temperature Pump */
+                // Obtain Rth and temperature
+                //float rth = RTD_RBIAS * ((1024 / (1024.0 - (float)adc_data[4])) - 1);
+                rth = RTD_RBIAS * ((1023.0/ (float)(adc_data[7] * 1.5)) - 1);
+                printk("R Thermistor: %d \r\n", (int32_t)(rth * 10));
+                tK = (3950.0 * 298.15) / (3950 + (298.15 * log(rth / 10000)));
+                tC = tK - 273.15;
+                printk("Temperature: %d \r\n", (int32_t)(tC * 10));
+                adc_data[4] = (uint16_t)(tC*10); 
 
+                //printk("ADC 6: %d, ADC 4: %d, ADC 5: %d, ADC 2: %d, ADC 7: %d, VDD: %d \r\n", adc_data[0], adc_data[1], adc_data[2], adc_data[3], adc_data[4], adc_data[5]);
+                printk("Temp PSU: %d, VDD: %d, CR1: %d, CR2: %d, VBat: %d, Temp Pump: %d \r\n", adc_data[0], adc_data[1], adc_data[4], adc_data[5], adc_data[6], adc_data[7]);
 
                 if (auto_mode)
                 {

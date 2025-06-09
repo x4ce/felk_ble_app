@@ -20,12 +20,13 @@ struct adc_sequence sequence = {
 };
 
 static const struct adc_dt_spec adc_ch0 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0);
-static const struct adc_dt_spec adc_ch2 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 1);
-static const struct adc_dt_spec adc_ch3 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2);
-static const struct adc_dt_spec adc_ch4 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 3);
-static const struct adc_dt_spec adc_ch5 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 4);
-static const struct adc_dt_spec adc_ch6 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 5);
-static const struct adc_dt_spec adc_ch7 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 6);
+static const struct adc_dt_spec adc_ch1 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 1);
+static const struct adc_dt_spec adc_ch2 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2);
+static const struct adc_dt_spec adc_ch3 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 3);
+static const struct adc_dt_spec adc_ch4 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 4);
+static const struct adc_dt_spec adc_ch5 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 5);
+static const struct adc_dt_spec adc_ch6 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 6);
+static const struct adc_dt_spec adc_ch7 = ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 7);
 
 void adc_init(void)
 {
@@ -37,6 +38,17 @@ void adc_init(void)
     }
 
     err = adc_channel_setup_dt(&adc_ch0);
+    if (err <0)
+    {
+        printk("Could not setup channel #0 (%d)\n", err);
+    }
+
+    if (!device_is_ready(adc_ch1.dev))
+    {
+    printk("ADC controller device %s not ready\n", adc_ch1.dev->name);
+    }
+
+    err = adc_channel_setup_dt(&adc_ch1);
     if (err <0)
     {
         printk("Could not setup channel #0 (%d)\n", err);
@@ -123,7 +135,44 @@ uint16_t read_adc(uint8_t ch)
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch0.dev->name, adc_ch0.channel_id);
             (void)adc_sequence_init_dt(&adc_ch0, &sequence);
+            
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch7.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+
             err = adc_read(adc_ch0.dev, &sequence);
+            if (err <0)
+            {
+                printk("Could not read (%d)\n", err);
+            } else {
+                val_mv = (int32_t)buf;
+            }
+
+            printk("%"PRId32"\n", val_mv);
+            // err = adc_raw_to_millivolts_dt(&adc_ch7, &val_mv);
+        
+            // val_mv = (int32_t)(val_mv * CH7_ADC_MF);
+
+            // if (err < 0) {
+            //     printk(" (value in mV not available)\n");
+            // } else {
+            //     printk(" = %"PRId32" mV\n", val_mv);
+            // }
+            break;
+        case 1:
+            printk("ADC reading of device %s, channel %d: ", 
+                adc_ch1.dev->name, adc_ch1.channel_id);
+            (void)adc_sequence_init_dt(&adc_ch1, &sequence);
+            err = adc_read(adc_ch1.dev, &sequence);
             if (err <0)
             {
                 printk("Could not read (%d)\n", err);
@@ -179,7 +228,7 @@ uint16_t read_adc(uint8_t ch)
             }
             break;
 
-            case 3:
+        case 3:
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch3.dev->name, adc_ch3.channel_id);
             (void)adc_sequence_init_dt(&adc_ch3, &sequence);

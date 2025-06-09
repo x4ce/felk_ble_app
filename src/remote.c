@@ -1,7 +1,7 @@
 #include "remote.h"
 #include "common.h"
 
-#define         ADC_NO_CH               6
+#define         ADC_NO_CH               8
 
 extern uint16_t adc_val;
 
@@ -117,9 +117,9 @@ static ssize_t read_value(struct bt_conn *conn,
     if (ble_cb.data_cb) {
 		// Call the application callback function to update the get the current value of the button
 		//ble_cb.data_cb();//read_adc();
-		bt_read_data[0] = adc_data[0];
-		bt_read_data[1] = adc_data[1];
-		bt_read_data[2] = adc_data[2];
+		bt_read_data[0] = adc_data[6]; // VBat
+		bt_read_data[1] = adc_data[4]; // CR1
+		bt_read_data[2] = adc_data[5]; // CR2
 		return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
 					 sizeof(*value));
 	}
@@ -141,9 +141,9 @@ static ssize_t read_value2(struct bt_conn *conn,
 	if (ble_cb.data_cb) {
 	// Call the application callback function to update the get the current value of the button
 	//ble_cb.data_cb();//read_adc();
-	bt_read_data2[0] = adc_data[3];
-	bt_read_data2[1] = adc_data[4];
-	bt_read_data2[2] = adc_data[6];
+	bt_read_data2[0] = adc_data[2]; // Pressure +ve
+	bt_read_data2[1] = adc_data[7]; // Temp Pump
+	bt_read_data2[2] = adc_data[0]; // Temp PSU
 	
 	return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
 			sizeof(*value));
