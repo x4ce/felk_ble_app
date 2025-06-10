@@ -324,7 +324,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                 if (auto_mode)
                 {
-                        if (adc_data[0] > VBAT_THRESHOLD)
+                        if (adc_data[6] > VBAT_THRESHOLD)
                         {
                                 printk("Battery Power detected!\n");
                                 vbat_state = true;
@@ -335,7 +335,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 vbat_state = false;
                         }       
 
-                        if ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H))
+                        if ((adc_data[4] > cr_thresh) && (adc_data[4] < CR1_THRESHOLD_H))
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -376,7 +376,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 cr1_state = false;
                         }
 
-                        if ((adc_data[2] > cr_thresh) && (adc_data[2] < CR2_THRESHOLD_H))
+                        if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H))
                         {
                                 printk("CR2 Power detected!\n");
                                 if (!cr2_state)
