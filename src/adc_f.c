@@ -2,7 +2,7 @@
 
 #define         CH2_ADC_MF           1.5      // Pressure Sensor
 #define         CH3_ADC_MF           1        // Battery/ Pressure Sensor
-#define         CH4_ADC_MF           8.5      // CR1: 10k/(75k+10k) = 0.117 ~= 1/8.5
+#define         CH1_ADC_MF           8.5      // CR1: 10k/(75k+10k) = 0.117 ~= 1/8.5
 #define         CH5_ADC_MF           8.5      // CR2: 10k/(75k+10k) = 0.117 ~= 1/8.5
 #define         CH6_ADC_MF           8.5      // Bat: 10k/(75k+10k) = 0.117 ~= 1/8.5   
 #define         CH7_ADC_MF           1        // Therm: 10k/(10k+0) = 1
@@ -172,6 +172,19 @@ uint16_t read_adc(uint8_t ch)
             printk("ADC reading of device %s, channel %d: ", 
                 adc_ch1.dev->name, adc_ch1.channel_id);
             (void)adc_sequence_init_dt(&adc_ch1, &sequence);
+            // for (i = 0; i < ADC_MEAS_NO; i++)
+            // {
+            //     err = adc_read(adc_ch4.dev, &sequence);
+            //     k_msleep(ADC_MEAS_INT);
+            //     if (err <0)
+            //     {
+            //         printk("Could not read (%d)\n", err);
+            //     } else {
+            //         tmp_buf += (int32_t)buf;
+            //     }
+            // }
+            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
+        
             err = adc_read(adc_ch1.dev, &sequence);
             if (err <0)
             {
@@ -179,15 +192,22 @@ uint16_t read_adc(uint8_t ch)
             } else {
                 val_mv = (int32_t)buf;
             }
+
+            printk("%"PRId32, val_mv);
+            err = adc_raw_to_millivolts_dt(&adc_ch1, &val_mv);
         
-            printk("%"PRId32"\n", val_mv);
-            // err = adc_raw_to_millivolts_dt(&adc_ch0, &val_mv);
-            
-            // if (err < 0) {
-            //     printk(" (value in mV not available)\n");
-            // } else {
-            //     printk(" = %"PRId32" mV\n", val_mv);
-            // }
+            val_mv = (int32_t)(val_mv * CH1_ADC_MF);
+
+            if (val_mv > 50000)
+            {
+                val_mv = 0;
+            }
+
+            if (err < 0) {
+                printk(" (value in mV not available)\n");
+            } else {
+                printk(" = %"PRId32" mV\n", val_mv);
+            }
             break;
         case 2:
             printk("ADC reading of device %s, channel %d: ", 
@@ -213,13 +233,13 @@ uint16_t read_adc(uint8_t ch)
                 {
                     printk("Could not read (%d)\n", err);
                 } else {
-                    val_mv = (int32_t)buf;
+                    val_mv = (int32_t)((int16_t)buf);
                 }
             
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch2, &val_mv);
             
-            val_mv = (int32_t)(val_mv / CH2_ADC_MF);
+            //val_mv = (int32_t)(val_mv / CH2_ADC_MF);
 
             if (err < 0) {
                 printk(" (value in mV not available)\n");
@@ -250,18 +270,13 @@ uint16_t read_adc(uint8_t ch)
             {
                 printk("Could not read (%d)\n", err);
             } else {
-                val_mv = (int32_t)buf;
+                val_mv = (int32_t)((int16_t)buf);
             }
         
             printk("%"PRId32, val_mv);
             err = adc_raw_to_millivolts_dt(&adc_ch3, &val_mv);
         
-            val_mv = (int32_t)(val_mv * CH3_ADC_MF);
-
-            if (val_mv > 50000)
-            {
-                val_mv = 0;
-            }
+            //val_mv = (int32_t)(val_mv * CH3_ADC_MF);
 
             if (err < 0) {
                 printk(" (value in mV not available)\n");
@@ -272,21 +287,8 @@ uint16_t read_adc(uint8_t ch)
 
         case 4:
             printk("ADC reading of device %s, channel %d: ", 
-                adc_ch4.dev->name, adc_ch4.channel_id);
+            adc_ch4.dev->name, adc_ch4.channel_id);
             (void)adc_sequence_init_dt(&adc_ch4, &sequence);
-            // for (i = 0; i < ADC_MEAS_NO; i++)
-            // {
-            //     err = adc_read(adc_ch4.dev, &sequence);
-            //     k_msleep(ADC_MEAS_INT);
-            //     if (err <0)
-            //     {
-            //         printk("Could not read (%d)\n", err);
-            //     } else {
-            //         tmp_buf += (int32_t)buf;
-            //     }
-            // }
-            // val_mv = (int32_t) tmp_buf / ADC_MEAS_NO;
-        
             err = adc_read(adc_ch4.dev, &sequence);
             if (err <0)
             {
@@ -294,22 +296,15 @@ uint16_t read_adc(uint8_t ch)
             } else {
                 val_mv = (int32_t)buf;
             }
-
-            printk("%"PRId32, val_mv);
-            err = adc_raw_to_millivolts_dt(&adc_ch4, &val_mv);
         
-            val_mv = (int32_t)(val_mv * CH4_ADC_MF);
-
-            if (val_mv > 50000)
-            {
-                val_mv = 0;
-            }
-
-            if (err < 0) {
-                printk(" (value in mV not available)\n");
-            } else {
-                printk(" = %"PRId32" mV\n", val_mv);
-            }
+            printk("%"PRId32"\n", val_mv);
+            // err = adc_raw_to_millivolts_dt(&adc_ch0, &val_mv);
+            
+            // if (err < 0) {
+            //     printk(" (value in mV not available)\n");
+            // } else {
+            //     printk(" = %"PRId32" mV\n", val_mv);
+            // }
             break;
 
         case 5:

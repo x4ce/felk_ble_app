@@ -13,7 +13,7 @@
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
 #define         TRIG_THREAD_PRIORITY    7
-#define         EXE_SLEEP_TIME          1000
+#define         EXE_SLEEP_TIME          200
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -291,10 +291,10 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                 // Acquire ADC data
                 adc_data[0] = read_adc(0);      // Temp PSU
-                adc_data[1] = read_adc(1);      // Internal VDD
-                //adc_data[2] = read_adc(2);      // Pressure +ve
-                //adc_data[3] = read_adc(3);      // Pressure -ve
-                adc_data[4] = read_adc(4);      // CR1
+                adc_data[1] = read_adc(1);      // CR1
+                adc_data[2] = read_adc(2);      // Pressure +ve
+                adc_data[3] = read_adc(3);      // Pressure -ve
+                adc_data[4] = read_adc(4);      // Internal VDD
                 adc_data[5] = read_adc(5);      // CR2
                 adc_data[6] = read_adc(6);      // Battery
                 adc_data[7] = read_adc(7);      // Temp Pump
@@ -320,7 +320,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 adc_data[4] = (uint16_t)(tC*10); 
 
                 //printk("ADC 6: %d, ADC 4: %d, ADC 5: %d, ADC 2: %d, ADC 7: %d, VDD: %d \r\n", adc_data[0], adc_data[1], adc_data[2], adc_data[3], adc_data[4], adc_data[5]);
-                printk("Temp PSU: %d, VDD: %d, CR1: %d, CR2: %d, VBat: %d, Temp Pump: %d \r\n", adc_data[0], adc_data[1], adc_data[4], adc_data[5], adc_data[6], adc_data[7]);
+                printk("Temp PSU: %d, VDD: %d, CR1: %d, CR2: %d, VBat: %d, Temp Pump: %d \r\n", adc_data[0], adc_data[4], adc_data[1], adc_data[5], adc_data[6], adc_data[7]);
 
                 if (auto_mode)
                 {
@@ -335,7 +335,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 vbat_state = false;
                         }       
 
-                        if ((adc_data[4] > cr_thresh) && (adc_data[4] < CR1_THRESHOLD_H))
+                        if ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H))
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -364,13 +364,15 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
                                         }
-                                        
-                                        k_msleep(2000);
-                                        
-                                        ret = gpio_pin_set_dt(&bldc, 0);
-                                        if (ret)
+                                        if (!cr2_state)
                                         {
-                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                k_msleep(2000);
+                                                
+                                                ret = gpio_pin_set_dt(&bldc, 0);
+                                                if (ret)
+                                                {
+                                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                }
                                         }
                                 }
                                 cr1_state = false;
@@ -406,16 +408,21 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                                         }
                                         
-                                        k_msleep(2000);
-                                        
-                                        ret = gpio_pin_set_dt(&bldc, 0);
-                                        if (ret)
+                                        if (!cr1_state)
                                         {
-                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                k_msleep(2000);
+                                                
+                                                ret = gpio_pin_set_dt(&bldc, 0);
+                                                if (ret)
+                                                {
+                                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                }
                                         }
                                 }
                                 cr2_state = false;
                         }
+
+
                 }
 
                 k_sleep(K_MSEC(EXE_SLEEP_TIME));
