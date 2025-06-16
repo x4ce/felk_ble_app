@@ -25,7 +25,7 @@
 #define         BLDC_NODE               DT_ALIAS(bldc)
 
 #define         ADC_NO_CH               8
-#define         VBAT_THRESHOLD          10000
+#define         VBAT_THRESHOLD          9000
 #define         CR1_THRESHOLD_L         300
 #define         CR1_THRESHOLD_H         14000
 #define         CR2_THRESHOLD_L         300
@@ -386,19 +386,68 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 //printk("ADC 6: %d, ADC 4: %d, ADC 5: %d, ADC 2: %d, ADC 7: %d, VDD: %d \r\n", adc_data[0], adc_data[1], adc_data[2], adc_data[3], adc_data[4], adc_data[5]);
                 printk("Temp PSU: %d, VDD: %d, CR1: %d, CR2: %d, VBat: %d, Temp Pump: %d \r\n", adc_data[0], adc_data[4], adc_data[1], adc_data[5], adc_data[6], adc_data[7]);
 
-                if (auto_mode)
+                if (adc_data[6] >= VBAT_THRESHOLD)
                 {
-                        if (adc_data[6] > VBAT_THRESHOLD)
-                        {
-                                printk("Battery Power detected!\n");
-                                vbat_state = true;
-                        }
-                        else
-                        {
-                                printk("Battery Power not detected!\n");
-                                vbat_state = false;
-                        }       
+                        printk("Battery Power detected!\n");
+                        vbat_state = true;
+                        auto_mode = false;
 
+                        ret = gpio_pin_set_dt(&sol1ext, 1);
+                        if (ret)
+                        {
+                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                        }
+
+                        ret = gpio_pin_set_dt(&sol2ext, 1);
+                        if (ret)
+                        {
+                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                        }
+
+                        ret = gpio_pin_set_dt(&bldc, 1);
+                        if (ret)
+                        {
+                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                        }
+
+                        pwm_set_dc(1, 50);
+                }
+                else
+                {
+                        printk("Battery Power not detected!\n");
+
+                        if (vbat_state)
+                        {
+                                ret = gpio_pin_set_dt(&sol1ext, 0);
+                                if (ret)
+                                {
+                                        printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                }
+
+                                ret = gpio_pin_set_dt(&sol2ext, 0);
+                                if (ret)
+                                {
+                                        printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                }
+
+                                pwm_set_dc(1, 0);
+
+                                k_msleep(2000);
+                                ret = gpio_pin_set_dt(&bldc, 0);
+                                if (ret)
+                                {
+                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                }
+
+                        
+                        }
+
+                        vbat_state = false;
+                        auto_mode = true;
+                }  
+
+                if (auto_mode && !vbat_state)
+                {
                         if ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H))
                         {
                                 printk("CR1 Power detected!\n");
