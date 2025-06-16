@@ -4,6 +4,9 @@
 #include <zephyr/sys/printk.h>
 #include <hal/nrf_gpio.h>
 #include <math.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/fs/nvs.h>
 
 #include "common.h"
 #include "remote.h"
@@ -29,6 +32,15 @@
 #define         CR2_THRESHOLD_H         14000
 
 #define         RTD_RBIAS               10000
+
+#define NVS_PARTITION		storage_partition
+#define NVS_PARTITION_DEVICE	FIXED_PARTITION_DEVICE(NVS_PARTITION)
+#define NVS_PARTITION_OFFSET	FIXED_PARTITION_OFFSET(NVS_PARTITION)
+#define CR_THRESH_ID            1
+
+static struct nvs_fs fs;
+uint16_t nvs_cr;
+bool nvs_wrt_f = false;
 
 uint16_t cr_thresh = 500;
 
@@ -132,7 +144,16 @@ static void app_cmd_cb(uint8_t cmd)
 static void app_cr_cb(uint16_t crval)
 {
         printk("Current CR: %d, Received CR: %d\r\n", cr_thresh, crval);
-        cr_thresh = crval;
+        if (crval >= 500 && crval <= 6000)
+        {
+                cr_thresh = crval;
+                nvs_wrt_f = true;
+                // (void)nvs_write(&fs, CR_THRESH_ID, &cr_thresh, sizeof(cr_thresh));
+                // printk("Set threshold in NVS: %d\r\n", cr_thresh);
+        } else {
+                printk("Incorrect value\r\n");
+        }
+        
 }
 
 static uint16_t app_data_cb(void)
@@ -254,6 +275,43 @@ int main(void)
 		return 6;
 	}
 
+        /* NVS Initialization */
+        struct flash_pages_info info;
+        int rc = 0;
+	fs.flash_device = NVS_PARTITION_DEVICE;
+	if (!device_is_ready(fs.flash_device)) {
+		printk("Flash device %s is not ready\n", fs.flash_device->name);
+		return 0;
+	}
+	fs.offset = NVS_PARTITION_OFFSET;
+	rc = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
+	if (rc) {
+		printk("Unable to get page info\n");
+		return 0;
+	}
+	fs.sector_size = info.size;
+	fs.sector_count = 2U; // 2 Sectors
+
+	rc = nvs_mount(&fs);
+	if (rc) {
+		printk("Flash Init failed\n");
+		return 0;
+	}
+        
+        rc = nvs_read(&fs, CR_THRESH_ID, &nvs_cr, sizeof(nvs_cr));
+        if (rc > 0)
+        {
+               	/* item was found, show it */
+		printk("Id: %d, Data: %d\n",
+			CR_THRESH_ID, nvs_cr);
+                // Set CR threshold
+                cr_thresh = nvs_cr;
+        } else {
+                printk("No CR threshold found, adding %d at id %d\n",
+		       cr_thresh, CR_THRESH_ID);
+                       (void)nvs_write(&fs, CR_THRESH_ID, &cr_thresh, sizeof(cr_thresh));
+        }
+
         ret = felk_ble_init(&app_callbacks);
 
         printk("BLE Service successfully initialized!\r\n");
@@ -279,6 +337,12 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
         while (1)
         {
+                if (nvs_wrt_f)
+                {
+                        (void)nvs_write(&fs, CR_THRESH_ID, &cr_thresh, sizeof(cr_thresh));
+                        printk("Set threshold in NVS: %d\r\n", cr_thresh);
+                        nvs_wrt_f = false;
+                }
                 printk("ADC Thread fired!\r\n");
                 // Acquire ADC data
                 // adc_data[0] = read_adc(6);      // Battery
