@@ -464,6 +464,8 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                         }
+
+                                        pwm_set_dc(1, 80);
                                 }
                                 cr1_state = true;
                         }
@@ -479,6 +481,8 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         }
                                         if (!cr2_state)
                                         {
+                                                pwm_set_dc(1, 0);
+
                                                 k_msleep(2000);
                                                 
                                                 ret = gpio_pin_set_dt(&bldc, 0);
@@ -507,6 +511,8 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                         }
+
+                                        pwm_set_dc(1, 80);
                                 }
                                 cr2_state = true;
                         }
@@ -523,6 +529,8 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         
                                         if (!cr1_state)
                                         {
+                                                pwm_set_dc(1, 0);
+
                                                 k_msleep(2000);
                                                 
                                                 ret = gpio_pin_set_dt(&bldc, 0);
