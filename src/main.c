@@ -392,13 +392,13 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                         vbat_state = true;
                         auto_mode = false;
 
-                        ret = gpio_pin_set_dt(&sol1ext, 1);
+                        ret = gpio_pin_set_dt(&sol1, 1);
                         if (ret)
                         {
                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                         }
 
-                        ret = gpio_pin_set_dt(&sol2ext, 1);
+                        ret = gpio_pin_set_dt(&sol2, 1);
                         if (ret)
                         {
                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
@@ -418,13 +418,13 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                         if (vbat_state)
                         {
-                                ret = gpio_pin_set_dt(&sol1ext, 0);
+                                ret = gpio_pin_set_dt(&sol1, 0);
                                 if (ret)
                                 {
                                         printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                                 }
 
-                                ret = gpio_pin_set_dt(&sol2ext, 0);
+                                ret = gpio_pin_set_dt(&sol2, 0);
                                 if (ret)
                                 {
                                         printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
@@ -453,7 +453,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
                                 {
-                                        ret = gpio_pin_set_dt(&sol2ext, 1);
+                                        ret = gpio_pin_set_dt(&sol1ext, 1);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
@@ -474,7 +474,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 printk("CR1 Power not detected!\n");
                                 if (cr1_state)
                                 {
-                                        ret = gpio_pin_set_dt(&sol2ext, 0);
+                                        ret = gpio_pin_set_dt(&sol1ext, 0);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
@@ -500,7 +500,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 printk("CR2 Power detected!\n");
                                 if (!cr2_state)
                                 {
-                                        ret = gpio_pin_set_dt(&sol1ext, 1);
+                                        ret = gpio_pin_set_dt(&sol2ext, 1);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
@@ -521,7 +521,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 printk("CR2 Power not detected!\n");
                                 if (cr2_state)
                                 {
-                                        ret = gpio_pin_set_dt(&sol1ext, 0);
+                                        ret = gpio_pin_set_dt(&sol2ext, 0);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
