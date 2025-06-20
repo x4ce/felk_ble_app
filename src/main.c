@@ -16,7 +16,7 @@
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
 #define         TRIG_THREAD_PRIORITY    7
-#define         EXE_SLEEP_TIME          200
+#define         EXE_SLEEP_TIME          210
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -30,6 +30,7 @@
 #define         CR1_THRESHOLD_H         14000
 #define         CR2_THRESHOLD_L         300
 #define         CR2_THRESHOLD_H         14000
+#define         MTR_OFF_DELAY           5000
 
 #define         RTD_RBIAS               10000
 
@@ -432,7 +433,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                                 pwm_set_dc(1, 0);
 
-                                k_msleep(2000);
+                                k_msleep(MTR_OFF_DELAY);
                                 ret = gpio_pin_set_dt(&bldc, 0);
                                 if (ret)
                                 {
@@ -483,7 +484,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 pwm_set_dc(1, 0);
 
-                                                k_msleep(2000);
+                                                k_msleep(MTR_OFF_DELAY);
                                                 
                                                 ret = gpio_pin_set_dt(&bldc, 0);
                                                 if (ret)
@@ -531,7 +532,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 pwm_set_dc(1, 0);
 
-                                                k_msleep(2000);
+                                                k_msleep(MTR_OFF_DELAY);
                                                 
                                                 ret = gpio_pin_set_dt(&bldc, 0);
                                                 if (ret)
