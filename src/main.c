@@ -30,7 +30,7 @@
 #define         CR1_THRESHOLD_H         14000
 #define         CR2_THRESHOLD_L         300
 #define         CR2_THRESHOLD_H         14000
-#define         MTR_OFF_DELAY           5000
+#define         MTR_OFF_DELAY           2000
 
 #define         RTD_RBIAS               10000
 
@@ -38,6 +38,11 @@
 #define NVS_PARTITION_DEVICE	FIXED_PARTITION_DEVICE(NVS_PARTITION)
 #define NVS_PARTITION_OFFSET	FIXED_PARTITION_OFFSET(NVS_PARTITION)
 #define CR_THRESH_ID            1
+
+int ret;
+bool vbat_state = false;
+bool cr1_state = false;
+bool cr2_state = false;
 
 static struct nvs_fs fs;
 uint16_t nvs_cr;
@@ -49,12 +54,27 @@ extern uint8_t pwm_ch1_dc;
 uint16_t adc_data[ADC_NO_CH] = {0};
 bool auto_mode = true;
 
-
 static const struct gpio_dt_spec sol1 = GPIO_DT_SPEC_GET(SOL1_NODE, gpios);
 static const struct gpio_dt_spec sol1ext = GPIO_DT_SPEC_GET(SOL1EXT_NODE, gpios);
 static const struct gpio_dt_spec sol2 = GPIO_DT_SPEC_GET(SOL2_NODE, gpios);
 static const struct gpio_dt_spec sol2ext = GPIO_DT_SPEC_GET(SOL2EXT_NODE, gpios);
 static const struct gpio_dt_spec bldc = GPIO_DT_SPEC_GET(BLDC_NODE, gpios);
+
+static void timer0_handler(struct k_timer *dummy)
+{
+        int ret;
+        if (!cr1_state && !cr2_state)
+        {
+                ret = gpio_pin_set_dt(&bldc, 0);
+                if (ret)
+                {
+                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                }
+        }
+
+}
+
+K_TIMER_DEFINE(timer0, timer0_handler, NULL);
 
 static void app_cmd_cb(uint8_t cmd)
 {
@@ -331,11 +351,6 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
         ARG_UNUSED(unused2);
         ARG_UNUSED(unused3);
 
-        int ret;
-        bool vbat_state = false;
-        bool cr1_state = false;
-        bool cr2_state = false;
-
         while (1)
         {
                 if (nvs_wrt_f)
@@ -484,13 +499,14 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 pwm_set_dc(1, 0);
 
-                                                k_msleep(MTR_OFF_DELAY);
+                                                k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
+                                                //k_msleep(MTR_OFF_DELAY);
                                                 
-                                                ret = gpio_pin_set_dt(&bldc, 0);
-                                                if (ret)
-                                                {
-                                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
-                                                }
+                                                // ret = gpio_pin_set_dt(&bldc, 0);
+                                                // if (ret)
+                                                // {
+                                                //         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                // }
                                         }
                                 }
                                 cr1_state = false;
@@ -531,14 +547,15 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         if (!cr1_state)
                                         {
                                                 pwm_set_dc(1, 0);
-
-                                                k_msleep(MTR_OFF_DELAY);
                                                 
-                                                ret = gpio_pin_set_dt(&bldc, 0);
-                                                if (ret)
-                                                {
-                                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
-                                                }
+                                                k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
+                                                //k_msleep(MTR_OFF_DELAY);
+                                                
+                                                // ret = gpio_pin_set_dt(&bldc, 0);
+                                                // if (ret)
+                                                // {
+                                                //         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                // }
                                         }
                                 }
                                 cr2_state = false;
