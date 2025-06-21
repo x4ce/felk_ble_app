@@ -448,7 +448,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                                 pwm_set_dc(1, 0);
 
-                                k_msleep(MTR_OFF_DELAY);
+                                //k_msleep(MTR_OFF_DELAY);
                                 ret = gpio_pin_set_dt(&bldc, 0);
                                 if (ret)
                                 {
