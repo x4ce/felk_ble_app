@@ -52,6 +52,7 @@ uint16_t cr_thresh = 500;
 
 extern uint8_t pwm_ch1_dc;
 uint16_t adc_data[ADC_NO_CH] = {0};
+uint16_t press_diff;
 bool auto_mode = true;
 
 static const struct gpio_dt_spec sol1 = GPIO_DT_SPEC_GET(SOL1_NODE, gpios);
@@ -378,6 +379,9 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 adc_data[5] = read_adc(5);      // CR2
                 adc_data[6] = read_adc(6);      // Battery
                 adc_data[7] = read_adc(7);      // Temp Pump
+
+                /* Pressure Diff */
+                press_diff = adc_data[2] - adc_data[3];
 
                 /* Temperature PSU */
                 // Obtain Rth and temperature

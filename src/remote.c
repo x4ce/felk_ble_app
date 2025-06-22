@@ -4,6 +4,7 @@
 #define         ADC_NO_CH               8
 
 extern uint16_t adc_val;
+extern uint16_t press_diff;
 
 static uint16_t bt_read_data[3];
 static uint16_t bt_read_data2[4];
@@ -141,7 +142,7 @@ static ssize_t read_value2(struct bt_conn *conn,
 	if (ble_cb.data_cb) {
 	// Call the application callback function to update the get the current value of the button
 	//ble_cb.data_cb();//read_adc();
-	bt_read_data2[0] = adc_data[2]; // Pressure +ve
+	bt_read_data2[0] = press_diff; //adc_data[2]; // Pressure +ve
 	bt_read_data2[1] = adc_data[7]; // Temp Pump
 	bt_read_data2[2] = adc_data[0]; // Temp PSU
 	bt_read_data2[3] = adc_data[3]; // Pressure -ve
