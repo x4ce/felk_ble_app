@@ -412,17 +412,17 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                         vbat_state = true;
                         auto_mode = false;
 
-                        ret = gpio_pin_set_dt(&sol1, 1);
-                        if (ret)
-                        {
-                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                        }
+                        // ret = gpio_pin_set_dt(&sol1, 1);
+                        // if (ret)
+                        // {
+                        //         printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                        // }
 
-                        ret = gpio_pin_set_dt(&sol2, 1);
-                        if (ret)
-                        {
-                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
-                        }
+                        // ret = gpio_pin_set_dt(&sol2, 1);
+                        // if (ret)
+                        // {
+                        //         printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                        // }
 
                         ret = gpio_pin_set_dt(&bldc, 1);
                         if (ret)
@@ -438,17 +438,17 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                         if (vbat_state)
                         {
-                                ret = gpio_pin_set_dt(&sol1, 0);
-                                if (ret)
-                                {
-                                        printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                                }
+                                // ret = gpio_pin_set_dt(&sol1, 0);
+                                // if (ret)
+                                // {
+                                //         printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                // }
 
-                                ret = gpio_pin_set_dt(&sol2, 0);
-                                if (ret)
-                                {
-                                        printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
-                                }
+                                // ret = gpio_pin_set_dt(&sol2, 0);
+                                // if (ret)
+                                // {
+                                //         printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                // }
 
                                 pwm_set_dc(1, 0);
 
@@ -468,7 +468,31 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
 
                 if (auto_mode && !vbat_state)
                 {
-                        if (((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)) && !(adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H))
+                        // Both CR1 & CR2 detected
+                        if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H) && ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
+                        {
+                                printk("Both CR1 & CR2 Powers detected!\n");
+                                ret = gpio_pin_set_dt(&sol2ext, 0);
+                                if (ret)
+                                {
+                                        printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                }
+                                cr1_state = false;
+
+                                ret = gpio_pin_set_dt(&sol1ext, 0);
+                                if (ret)
+                                {
+                                        printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                }                      
+
+                                cr2_state = false;
+
+                                pwm_set_dc(1, 0);
+                                                
+                                k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
+                        }
+                        // When CR1 detected but not CR2
+                        else if (((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)) && !(adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H))
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -488,7 +512,53 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         pwm_set_dc(1, 80);
                                 }
                                 cr1_state = true;
+
+                                printk("CR2 Power not detected!\n");
+                                if (cr2_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol1ext, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                        }
+                                        
+                                }
+                                cr2_state = false;
                         }
+                        // When CR2 detected but not CR1
+                        else if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H) && !((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
+                        {
+                                printk("CR2 Power detected!\n");
+                                if (!cr2_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol1ext, 1);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
+                                        }
+
+                                        ret = gpio_pin_set_dt(&bldc, 1);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                        }
+
+                                        pwm_set_dc(1, 80);
+                                }
+                                cr2_state = true;
+
+                                printk("CR1 Power not detected!\n");
+                                if (cr1_state)
+                                {
+                                        ret = gpio_pin_set_dt(&sol2ext, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                        }
+                                }
+                                cr1_state = false;
+                        }
+                        
                         else
                         {
                                 printk("CR1 Power not detected!\n");
@@ -514,31 +584,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         }
                                 }
                                 cr1_state = false;
-                        }
 
-                        if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H) && !((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
-                        {
-                                printk("CR2 Power detected!\n");
-                                if (!cr2_state)
-                                {
-                                        ret = gpio_pin_set_dt(&sol1ext, 1);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                                        }
-
-                                        ret = gpio_pin_set_dt(&bldc, 1);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
-                                        }
-
-                                        pwm_set_dc(1, 80);
-                                }
-                                cr2_state = true;
-                        }
-                        else
-                        {
                                 printk("CR2 Power not detected!\n");
                                 if (cr2_state)
                                 {
@@ -564,36 +610,6 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 }
                                 cr2_state = false;
                         }
-
-                        if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H) && ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
-                        {
-                                printk("CR1 Power not detected!\n");
-                                if (cr1_state)
-                                {
-                                        ret = gpio_pin_set_dt(&sol2ext, 0);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
-                                        }
-                                }
-                                cr1_state = false;
-
-                                printk("CR2 Power not detected!\n");
-                                if (cr2_state)
-                                {
-                                        ret = gpio_pin_set_dt(&sol1ext, 0);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                                        }                      
-                               }
-                                cr2_state = false;
-
-                                pwm_set_dc(1, 0);
-                                                
-                                k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
-                        }
-
 
                 }
 
