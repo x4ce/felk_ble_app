@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"nrf-connect.applications": [
+			"${workspaceFolder}/felk_ble_app"
+		],
+		"files.associations": {
+			"adc_f.h": "c"
+		}
+	}
+}
