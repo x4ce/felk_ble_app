@@ -469,7 +469,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                 if (auto_mode && !vbat_state)
                 {
                         // Both CR1 & CR2 detected
-                        if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H) && ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
+                        if (((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H)) && ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
                         {
                                 printk("Both CR1 & CR2 Powers detected!\n");
                                 ret = gpio_pin_set_dt(&sol2ext, 0);
@@ -492,7 +492,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
                         }
                         // When CR1 detected but not CR2
-                        else if (((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)) && !(adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H))
+                        else if (((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)) && !((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H)))
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -526,7 +526,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 cr2_state = false;
                         }
                         // When CR2 detected but not CR1
-                        else if ((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H) && !((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
+                        else if (((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H)) && !((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
                         {
                                 printk("CR2 Power detected!\n");
                                 if (!cr2_state)
