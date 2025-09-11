@@ -466,10 +466,13 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                         auto_mode = true;
                 }  
 
+                bool cr1_flag = (adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H);
+                bool cr2_flag = (adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H);
+
                 if (auto_mode && !vbat_state)
                 {
                         // Both CR1 & CR2 detected
-                        if (((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H)) && ((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
+                        if (cr1_flag && cr2_flag)
                         {
                                 printk("Both CR1 & CR2 Powers detected!\n");
                                 ret = gpio_pin_set_dt(&sol2ext, 0);
@@ -492,7 +495,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
                         }
                         // When CR1 detected but not CR2
-                        else if (((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)) && !((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H)))
+                        else if (cr1_flag && !cr2_flag)
                         {
                                 printk("CR1 Power detected!\n");
                                 if (!cr1_state)
@@ -510,8 +513,10 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         }
 
                                         pwm_set_dc(1, 80);
+
+                                        cr1_state = true;
                                 }
-                                cr1_state = true;
+                                
 
                                 printk("CR2 Power not detected!\n");
                                 if (cr2_state)
@@ -521,12 +526,13 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                                         }
-                                        
+
+                                        cr2_state = false;
                                 }
-                                cr2_state = false;
+                                
                         }
                         // When CR2 detected but not CR1
-                        else if (((adc_data[5] > cr_thresh) && (adc_data[5] < CR2_THRESHOLD_H)) && !((adc_data[1] > cr_thresh) && (adc_data[1] < CR1_THRESHOLD_H)))
+                        else if (cr2_flag && !cr1_flag)
                         {
                                 printk("CR2 Power detected!\n");
                                 if (!cr2_state)
@@ -544,8 +550,10 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         }
 
                                         pwm_set_dc(1, 80);
+
+                                        cr2_state = true;
                                 }
-                                cr2_state = true;
+                                
 
                                 printk("CR1 Power not detected!\n");
                                 if (cr1_state)
@@ -555,8 +563,10 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
                                         }
+
+                                        cr1_state = false;
                                 }
-                                cr1_state = false;
+                                
                         }
                         
                         else
