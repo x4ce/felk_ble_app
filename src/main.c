@@ -497,7 +497,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 }
                                 
                                 // Turn ON SOL-3
-                                pwm_set_dc(1, 50);
+                                pwm_set_dc(1, 80);
                                                 
                         }
                         // When CR1 detected but not CR2
@@ -521,7 +521,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                                         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                                 }
                                                 // Turn ON SOL-3
-                                                pwm_set_dc(1, 50);
+                                                pwm_set_dc(1, 80);
                                         }
                                         cr1_state = true;
                                 }
@@ -562,7 +562,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                                         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                                 }
                                                 // Turn ON SOL-3
-                                                pwm_set_dc(1, 50);
+                                                pwm_set_dc(1, 80);
                                         }
                                         cr2_state = true;
                                 }
