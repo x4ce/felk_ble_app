@@ -9,7 +9,8 @@
 			"${workspaceFolder}/felk_ble_app"
 		],
 		"files.associations": {
-			"adc_f.h": "c"
+			"adc_f.h": "c",
+			"kernel.h": "c"
 		}
 	}
 }
