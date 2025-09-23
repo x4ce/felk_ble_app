@@ -586,7 +586,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                         else
                         {
                                 printk("CR1 Power not detected!\n");
-                                if (cr1_state)
+                                if (cr1_state || cr2_state)
                                 {
                                         // Turn OFF SOL-2
                                         ret = gpio_pin_set_dt(&sol2ext, 0);
@@ -594,29 +594,23 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
                                         }
-                                        // Turn OFF SOL-3
-                                        pwm_set_dc(1, 0);
-                                        // Turn OFF BLDC through timer
-                                        k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
+                                        cr1_state = false;
 
-                                }
-                                cr1_state = false;
-
-                                printk("CR2 Power not detected!\n");
-                                if (cr2_state)
-                                {
                                         // Turn OFF SOL-1
                                         ret = gpio_pin_set_dt(&sol1ext, 0);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                                         }
+                                        cr2_state = false;
+
                                         // Turn OFF SOL-3
                                         pwm_set_dc(1, 0);
                                         // Turn OFF BLDC through timer
                                         k_timer_start(&timer0, K_MSEC(MTR_OFF_DELAY), K_FOREVER);
+
                                 }
-                                cr2_state = false;
+
                         }
 
                 }
