@@ -431,7 +431,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                         }
 
-                        pwm_set_dc(1, 50);
+                        pwm_set_dc(1, 80);
                 }
                 else
                 {
@@ -530,67 +530,9 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                         else if (cr1_flag && !cr2_flag)
                         {
                                 printk("CR1 Power detected!\n");
-                                if (!sol2_state)
-                                {
-                                        // Turn ON SOL-2 (both)
-                                        ret = gpio_pin_set_dt(&sol2, 1);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
-                                        }
-                                        ret = gpio_pin_set_dt(&sol2ext, 1);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
-                                        }
-                                        if (!sol3_bldc_state)         // if BLDC & SOL-3 not already active
-                                        {
-                                                // Turn ON BLDC
-                                                ret = gpio_pin_set_dt(&bldc, 1);
-                                                if (ret)
-                                                {
-                                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
-                                                }
-                                                // Turn ON SOL-3
-                                                pwm_set_dc(1, 80);
-
-                                                sol3_bldc_state = true;
-                                        }
-                                        sol2_state = true;
-                                }
-                                
-
-                                printk("CR2 Power not detected!\n");
-                                if (sol1_state)
-                                {
-                                        // Turn OFF SOL-1 (Both)
-                                        ret = gpio_pin_set_dt(&sol1, 0);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                                        }
-                                        ret = gpio_pin_set_dt(&sol1ext, 0);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                                        }
-
-                                        sol1_state = false;
-                                }
-                                
-                        }
-                        // When CR2 detected but not CR1
-                        else if (cr2_flag && !cr1_flag)
-                        {
-                                printk("CR2 Power detected!\n");
                                 if (!sol1_state)
                                 {
-                                        // Turn ON SOL-1 (Both)
-                                        ret = gpio_pin_set_dt(&sol1, 1);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
-                                        }
+                                        // Turn ON SOL-1
                                         ret = gpio_pin_set_dt(&sol1ext, 1);
                                         if (ret)
                                         {
@@ -613,15 +555,10 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 }
                                 
 
-                                printk("CR1 Power not detected!\n");
+                                printk("CR2 Power not detected!\n");
                                 if (sol2_state)
                                 {
-                                        // Turn OFF SOL-2 (Both)
-                                        ret = gpio_pin_set_dt(&sol2, 0);
-                                        if (ret)
-                                        {
-                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
-                                        }
+                                        // Turn OFF SOL-2
                                         ret = gpio_pin_set_dt(&sol2ext, 0);
                                         if (ret)
                                         {
@@ -632,39 +569,72 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 }
                                 
                         }
-                        
-                        else
+                        // When CR2 detected but not CR1
+                        else if (cr2_flag && !cr1_flag)
                         {
-                                printk("CR1 Power not detected!\n");
-                                if (sol2_state)
+                                printk("CR2 Power detected!\n");
+                                if (!sol2_state)
                                 {
-                                        // Turn OFF SOL-2 (Both)
-                                        ret = gpio_pin_set_dt(&sol2, 0);
+                                        // Turn ON SOL-2
+                                        ret = gpio_pin_set_dt(&sol2ext, 1);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
                                         }
-                                        ret = gpio_pin_set_dt(&sol2ext, 0);
-                                        if (ret)
+                                        if (!sol3_bldc_state)         // if BLDC & SOL-3 not already active
                                         {
-                                                printk("Error: %s %d set failed!\r\n", sol2ext.port->name, sol2ext.pin);
+                                                // Turn ON BLDC
+                                                ret = gpio_pin_set_dt(&bldc, 1);
+                                                if (ret)
+                                                {
+                                                        printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
+                                                }
+                                                // Turn ON SOL-3
+                                                pwm_set_dc(1, 80);
+
+                                                sol3_bldc_state = true;
                                         }
-                                        sol2_state = false;
+                                        sol2_state = true;
                                 }
+                                
+
+                                printk("CR1 Power not detected!\n");
                                 if (sol1_state)
                                 {
-                                        // Turn OFF SOL-1 (Both)
-                                        ret = gpio_pin_set_dt(&sol1, 0);
+                                        // Turn OFF SOL-1
+                                        ret = gpio_pin_set_dt(&sol1ext, 0);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                                         }
+
+                                        sol1_state = false;
+                                }
+                                
+                        }
+                        
+                        else
+                        {
+                                printk("CR1 Power not detected!\n");
+                                if (sol1_state)
+                                {
+                                        // Turn OFF SOL-1
                                         ret = gpio_pin_set_dt(&sol1ext, 0);
                                         if (ret)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol1ext.pin);
                                         }
                                         sol1_state = false;
+                                }
+                                if (sol2_state)
+                                {
+                                        // Turn OFF SOL-2
+                                        ret = gpio_pin_set_dt(&sol2ext, 0);
+                                        if (ret)
+                                        {
+                                                printk("Error: %s %d set failed!\r\n", sol1ext.port->name, sol2ext.pin);
+                                        }
+                                        sol2_state = false;
                                 }
                                 if (sol3_bldc_state)
                                 {
