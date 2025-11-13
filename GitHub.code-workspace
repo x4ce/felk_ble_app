@@ -1,16 +1,11 @@
 {
 	"folders": [
 		{
-			"path": ".."
+			"path": "."
+		},
+		{
+			"path": "../nrf_custom_boards"
 		}
 	],
-	"settings": {
-		"nrf-connect.applications": [
-			"${workspaceFolder}/felk_ble_app"
-		],
-		"files.associations": {
-			"adc_f.h": "c",
-			"kernel.h": "c"
-		}
-	}
+	"settings": {}
 }
