@@ -7,5 +7,11 @@
 			"path": "../nrf_custom_boards"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"common.h": "c",
+			"kernel.h": "c",
+			"printk.h": "c"
+		}
+	}
 }

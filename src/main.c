@@ -240,7 +240,7 @@ static struct felk_ble_cb app_callbacks = {
 int main(void)
 {
         int ret;
-
+        uart_init();
         ret = pwms_init();
         // Set initial PWM duty cycle to 70%
         //pwm_set_dc(1, 70);

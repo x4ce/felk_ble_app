@@ -10,6 +10,7 @@ target_sources(app PRIVATE
     src/remote.c
     src/pwm_f.c
     src/adc_f.c
+    src/mtr_api.c
 )
 
 zephyr_library_include_directories(library)

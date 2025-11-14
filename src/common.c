@@ -18,8 +18,8 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 			if ((evt->data.rx.len) == 1)
 			{
                                 
-				// if (evt->data.rx.buf[evt->data.rx.offset] == '1')
-				// 	gpio_pin_toggle_dt(&led0);
+				if (evt->data.rx.buf[evt->data.rx.offset] == '1')
+					uart_tx(uart, tx_buf, sizeof(tx_buf),SYS_FOREVER_US);
 				// else if (evt->data.rx.buf[evt->data.rx.offset] == '2')
 				// 	gpio_pin_toggle_dt(&led1);
 				// else if (evt->data.rx.buf[evt->data.rx.offset] == '3')
