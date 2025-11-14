@@ -8,6 +8,7 @@ extern uint16_t press_diff;
 
 static uint16_t bt_read_data[3];
 static uint16_t bt_read_data2[4];
+static uint16_t bt_read_data3;
 extern uint16_t adc_data[ADC_NO_CH];
 static uint16_t bt_read_status;
 
@@ -154,6 +155,64 @@ static ssize_t read_value2(struct bt_conn *conn,
 	return 0;
 }
 
+
+static ssize_t read_value3(struct bt_conn *conn,
+				const struct bt_gatt_attr *attr,
+				void *buf,
+				uint16_t len,
+				uint16_t offset)
+{
+	//get a pointer to bt_read_data which is passed in the BT_GATT_CHARACTERISTIC() and stored in attr->user_data
+	const uint16_t *value = attr->user_data;
+
+	printk("Attribute read, handle: %u, conn: %p \n", attr->handle, (void *)conn);
+
+	if (ble_cb.data_cb) {
+	// Call the application callback function to update the get the current value of the button
+	//ble_cb.data_cb();//read_adc();
+	bt_read_data2[0] = press_diff; //adc_data[2]; // Pressure +ve
+	
+	return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
+			sizeof(*value));
+	}
+
+	return 0;
+}
+
+static ssize_t cmd_value2(struct bt_conn *conn,
+			 const struct bt_gatt_attr *attr,
+			 const void *buf,
+			 uint16_t len, uint16_t offset, uint8_t flags)
+{
+	printk("Attribute write, handle: %u, conn: %p \n", attr->handle, (void *)conn);
+
+	if (len != 1U) {
+		printk("Write cmd: Incorrect data length\n");
+		return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
+	}
+
+	if (offset != 0) {
+		printk("Write cmd: Incorrect data offset\n");
+		return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
+	}
+
+	if (ble_cb.bldc_rx_cb) {
+		//Read the received value 
+		uint8_t val = *((uint8_t *)buf);
+
+		if (val || (val == 0)) {
+			//Call the application callback function to execute cmd
+			ble_cb.bldc_rx_cb(val);
+		} else {
+			printk("Write led: Incorrect value\n");
+			return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
+		}
+	}
+
+	return len;
+}
+
+
 static ssize_t cmd_value(struct bt_conn *conn,
 			 const struct bt_gatt_attr *attr,
 			 const void *buf,
@@ -266,6 +325,8 @@ int felk_ble_init(struct felk_ble_cb *callbacks)
 		ble_cb.cr_cb = callbacks->cr_cb;
 		ble_cb.data_cb = callbacks->data_cb;
 		ble_cb.status_cb = callbacks->status_cb;
+		ble_cb.bldc_rx_cb = callbacks->bldc_rx_cb;
+		ble_cb.bldc_data_cb = callbacks->bldc_data_cb;
 	}
 
 	return 0;
@@ -362,6 +423,20 @@ BT_GATT_PRIMARY_SERVICE(BT_UUID_FELK),
 			       BT_GATT_CHRC_WRITE,
 			       BT_GATT_PERM_WRITE,
 			       NULL, cr_value, NULL),
+/* Characteristic for reading BLDC Data */
+	BT_GATT_CHARACTERISTIC(BT_UUID_FELK_BLDC_TX,
+			       BT_GATT_CHRC_READ | BT_GATT_CHRC_INDICATE,
+			       BT_GATT_PERM_READ, read_value3, NULL,
+			       &bt_read_data3),
+/* Client Characteristic Configurator Declaration */
+
+	BT_GATT_CCC(read_ccc_cfg_changed,
+					BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+/* Characteristic for BLDC command reception */
+	BT_GATT_CHARACTERISTIC(BT_UUID_FELK_BLDC_RX,
+			       BT_GATT_CHRC_WRITE,
+			       BT_GATT_PERM_WRITE,
+			       NULL, cmd_value2, NULL),
 );
 
 int read_val_indicate(uint16_t val)

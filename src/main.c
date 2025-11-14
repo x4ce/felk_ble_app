@@ -56,6 +56,8 @@ uint16_t adc_data[ADC_NO_CH] = {0};
 uint16_t press_diff;
 bool auto_mode = true;
 
+uint8_t bldc_rx;
+
 static const struct gpio_dt_spec sol1 = GPIO_DT_SPEC_GET(SOL1_NODE, gpios);
 static const struct gpio_dt_spec sol1ext = GPIO_DT_SPEC_GET(SOL1EXT_NODE, gpios);
 static const struct gpio_dt_spec sol2 = GPIO_DT_SPEC_GET(SOL2_NODE, gpios);
@@ -230,11 +232,24 @@ static uint16_t app_status_cb(void)
         return (tmpH << 8) | tmpL;
 }
 
+static void app_bldc_rx_cb(uint8_t cmd)
+{
+        bldc_rx = cmd;
+        uart_tx_byte(bldc_rx);
+        __NOP();
+}
+
+static uint16_t app_bldc_data_cb(void)
+{
+
+}
 static struct felk_ble_cb app_callbacks = {
 	.cmd_cb = app_cmd_cb,
         .cr_cb = app_cr_cb,
 	.data_cb = app_data_cb,
         .status_cb = app_status_cb,
+        .bldc_rx_cb = app_bldc_rx_cb,
+        .bldc_data_cb = app_bldc_data_cb,
 };
 
 int main(void)

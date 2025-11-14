@@ -41,13 +41,23 @@ BT_UUID_128_ENCODE(0x5337b1b6, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
 #define BT_UUID_FELK_CR_VAL \
 	BT_UUID_128_ENCODE(0x5337b1b7, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
 
-#define BT_UUID_FELK			BT_UUID_DECLARE_128(BT_UUID_FELK_VAL)
-#define BT_UUID_FELK_TX     	BT_UUID_DECLARE_128(BT_UUID_FELK_TX_VAL)
-#define BT_UUID_FELK_RX     	BT_UUID_DECLARE_128(BT_UUID_FELK_RX_VAL)
-#define BT_UUID_FELK_ST     	BT_UUID_DECLARE_128(BT_UUID_FELK_ST_VAL)
-#define BT_UUID_FELK_SENSOR		BT_UUID_DECLARE_128(BT_UUID_FELK_SENSOR_VAL)
-#define BT_UUID_FELK_SENSORS	BT_UUID_DECLARE_128(BT_UUID_FELK_SENSORS_VAL)
-#define BT_UUID_FELK_CR     	BT_UUID_DECLARE_128(BT_UUID_FELK_CR_VAL)
+/** @brief BLDC CMD (RX) Characteristic UUID. */
+#define BT_UUID_FELK_BLDC_RX_VAL \
+	BT_UUID_128_ENCODE(0x5337b1b8, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
+
+/** @brief BLDC DATA (TX) Characteristic UUID. */
+#define BT_UUID_FELK_BLDC_TX_VAL \
+	BT_UUID_128_ENCODE(0x5337b1b9, 0x0e10, 0x47d7, 0x868e, 0x7aae0e5b45e1)
+
+#define BT_UUID_FELK				BT_UUID_DECLARE_128(BT_UUID_FELK_VAL)
+#define BT_UUID_FELK_TX     		BT_UUID_DECLARE_128(BT_UUID_FELK_TX_VAL)
+#define BT_UUID_FELK_RX     		BT_UUID_DECLARE_128(BT_UUID_FELK_RX_VAL)
+#define BT_UUID_FELK_ST     		BT_UUID_DECLARE_128(BT_UUID_FELK_ST_VAL)
+#define BT_UUID_FELK_SENSOR			BT_UUID_DECLARE_128(BT_UUID_FELK_SENSOR_VAL)
+#define BT_UUID_FELK_SENSORS		BT_UUID_DECLARE_128(BT_UUID_FELK_SENSORS_VAL)
+#define BT_UUID_FELK_CR     		BT_UUID_DECLARE_128(BT_UUID_FELK_CR_VAL)
+#define BT_UUID_FELK_BLDC_RX     	BT_UUID_DECLARE_128(BT_UUID_FELK_BLDC_RX_VAL)
+#define BT_UUID_FELK_BLDC_TX     	BT_UUID_DECLARE_128(BT_UUID_FELK_BLDC_TX_VAL)
 
 /** @brief Callback type for when an byte is received. */
 typedef void (*cmd_cb_t)(const uint8_t cmd);
@@ -61,6 +71,12 @@ typedef uint16_t (*data_cb_t)(void);
 /** @brief Callback type for when the data is pulled. */
 typedef uint16_t (*status_cb_t)(void);
 
+/** @brief Callback type for when an BLDC byte is received. */
+typedef void (*bldc_rx_cb_t)(const uint8_t cmd);
+
+/** @brief Callback type for when the BLDC data is pulled. */
+typedef uint16_t (*bldc_data_cb_t)(void);
+
 /** @brief Callback struct used by the Felk BLE Service. */
 struct felk_ble_cb {
 	/** cmd callback. */
@@ -71,6 +87,10 @@ struct felk_ble_cb {
 	data_cb_t data_cb;
 	/** read status callback. */
 	status_cb_t status_cb;
+	/** cmd callback. */
+	bldc_rx_cb_t bldc_rx_cb;
+	/** read status callback. */
+	bldc_data_cb_t bldc_data_cb;
 };
 
 /** @brief Initialize the LBS Service.

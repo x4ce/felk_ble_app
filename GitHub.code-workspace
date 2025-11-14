@@ -11,7 +11,9 @@
 		"files.associations": {
 			"common.h": "c",
 			"kernel.h": "c",
-			"printk.h": "c"
+			"printk.h": "c",
+			"uart.h": "c",
+			"mtr_api.h": "c"
 		}
 	}
 }
