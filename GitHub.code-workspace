@@ -14,6 +14,21 @@
 			"printk.h": "c",
 			"uart.h": "c",
 			"mtr_api.h": "c"
+		},
+		"nrf-connect.debugging.bindings": {
+			"${workspaceFolder}/build": "Launch build"
 		}
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"type": "nrf-connect",
+				"request": "launch",
+				"name": "Launch build",
+				"config": "${workspaceFolder}/build",
+				"runToEntryPoint": "main"
+			}
+		]
 	}
 }

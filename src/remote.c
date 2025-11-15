@@ -1,5 +1,6 @@
 #include "remote.h"
 #include "common.h"
+#include "mtr_api.h"
 
 #define         ADC_NO_CH               8
 
@@ -8,7 +9,7 @@ extern uint16_t press_diff;
 
 static uint16_t bt_read_data[3];
 static uint16_t bt_read_data2[4];
-static uint16_t bt_read_data3;
+static uint8_t bt_read_data3[4];
 extern uint16_t adc_data[ADC_NO_CH];
 static uint16_t bt_read_status;
 
@@ -142,7 +143,7 @@ static ssize_t read_value2(struct bt_conn *conn,
 
 	if (ble_cb.data_cb) {
 	// Call the application callback function to update the get the current value of the button
-	//ble_cb.data_cb();//read_adc();
+	
 	bt_read_data2[0] = press_diff; //adc_data[2]; // Pressure +ve
 	bt_read_data2[1] = adc_data[7]; // Temp Pump
 	bt_read_data2[2] = adc_data[0]; // Temp PSU
@@ -163,14 +164,17 @@ static ssize_t read_value3(struct bt_conn *conn,
 				uint16_t offset)
 {
 	//get a pointer to bt_read_data which is passed in the BT_GATT_CHARACTERISTIC() and stored in attr->user_data
-	const uint16_t *value = attr->user_data;
+	const uint32_t *value = attr->user_data;
 
 	printk("Attribute read, handle: %u, conn: %p \n", attr->handle, (void *)conn);
 
 	if (ble_cb.data_cb) {
 	// Call the application callback function to update the get the current value of the button
 	//ble_cb.data_cb();//read_adc();
-	bt_read_data2[0] = press_diff; //adc_data[2]; // Pressure +ve
+	bt_read_data3[0] = mtr_ble_status[0];
+	bt_read_data3[1] = mtr_ble_status[1];
+	bt_read_data3[2] = mtr_ble_status[2];
+	bt_read_data3[3] = mtr_ble_status[3];
 	
 	return bt_gatt_attr_read(conn, attr, buf, len, offset, value,
 			sizeof(*value));

@@ -5,7 +5,7 @@
 void uart_init(void);
 
 #define			RECEIVE_TIMEOUT			100
-#define			RECEIVE_BUFF_SIZE		2
+#define			RECEIVE_BUFF_SIZE		4
 
 const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 
@@ -17,18 +17,9 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	switch (evt->type)
 	{
 		case UART_RX_RDY:
-			if ((evt->data.rx.len) == 2)
+			if ((evt->data.rx.len) == 4)
 			{
-                                
-				// if (evt->data.rx.buf[evt->data.rx.offset] == '1')
-				// 	uart_tx(uart, tx_buf, sizeof(tx_buf),SYS_FOREVER_US);
-				// else if (evt->data.rx.buf[evt->data.rx.offset] == '2')
-				// 	gpio_pin_toggle_dt(&led1);
-				// else if (evt->data.rx.buf[evt->data.rx.offset] == '3')
-				// 	gpio_pin_toggle_dt(&led2);
-				// else if (evt->data.rx.buf[evt->data.rx.offset] == '4')
-				// 	gpio_pin_toggle_dt(&led3);
-                  k_work_submit(&uart_rx_work_item);              
+                k_work_submit(&uart_rx_work_item);              
 			}
 			break;
 		case UART_RX_DISABLED:

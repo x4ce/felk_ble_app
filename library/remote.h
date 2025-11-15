@@ -75,7 +75,7 @@ typedef uint16_t (*status_cb_t)(void);
 typedef void (*bldc_rx_cb_t)(const uint8_t cmd);
 
 /** @brief Callback type for when the BLDC data is pulled. */
-typedef uint16_t (*bldc_data_cb_t)(void);
+typedef uint8_t (*bldc_data_cb_t)(void);
 
 /** @brief Callback struct used by the Felk BLE Service. */
 struct felk_ble_cb {

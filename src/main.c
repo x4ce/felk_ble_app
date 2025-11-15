@@ -12,11 +12,13 @@
 #include "remote.h"
 #include "pwm_f.h"
 #include "adc_f.h"
+#include "mtr_api.h"
 
 #define         STACKSIZE               2048
 #define         EXE_THREAD_PRIORITY     6
-#define         TRIG_THREAD_PRIORITY    7
+#define         BLDC_THREAD_PRIORITY    7
 #define         EXE_SLEEP_TIME          100
+#define         BLDC_SLEEP_TIME         999
 
 #define         SOL1_NODE               DT_ALIAS(sol1)
 #define         SOL1EXT_NODE            DT_ALIAS(sol1ext)
@@ -33,6 +35,9 @@
 #define         MTR_OFF_DELAY           2000
 
 #define         RTD_RBIAS               10000
+
+#define         BLDC_STAT_START_IDX     14
+#define         BLDC_STAT_END_IDX       17
 
 #define NVS_PARTITION		storage_partition
 #define NVS_PARTITION_DEVICE	FIXED_PARTITION_DEVICE(NVS_PARTITION)
@@ -239,9 +244,9 @@ static void app_bldc_rx_cb(uint8_t cmd)
         __NOP();
 }
 
-static uint16_t app_bldc_data_cb(void)
+static uint8_t app_bldc_data_cb(void)
 {
-
+        __NOP();
 }
 static struct felk_ble_cb app_callbacks = {
 	.cmd_cb = app_cmd_cb,
@@ -668,4 +673,25 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
         }
 }
 
+static void bldc_thread_func(void *unused1, void *unused2, void *unused3)
+{
+        ARG_UNUSED(unused1);
+        ARG_UNUSED(unused2);
+        ARG_UNUSED(unused3);
+
+        while(1)
+        {
+                bldc_ping();
+                k_msleep(10);
+                bldc_get_run_stat();
+                k_msleep(10);
+                bldc_get_fault();
+                k_msleep(10);
+                bldc_get_RPM();
+                k_sleep(K_MSEC(BLDC_SLEEP_TIME));
+        }
+}
+
 K_THREAD_DEFINE(exe_thread_id, STACKSIZE, exe_thread_func, NULL, NULL, NULL, EXE_THREAD_PRIORITY, 0, 0);
+
+K_THREAD_DEFINE(bldc_thread_id, STACKSIZE, bldc_thread_func, NULL, NULL, NULL, BLDC_THREAD_PRIORITY, 0, 0);
