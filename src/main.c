@@ -79,6 +79,8 @@ static void timer0_handler(struct k_timer *dummy)
                 {
                         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                 }
+
+                bldc_stop();
         }
 
 }
@@ -451,6 +453,8 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                 printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                         }
 
+                        bldc_start();
+
                         pwm_set_dc(1, 80);
                 }
                 else
@@ -480,6 +484,7 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                 }
 
+                                bldc_stop();
                         
                         }
 
@@ -538,6 +543,8 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                         {
                                                 printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                         }
+
+                                        bldc_start();
                                         
                                         // Turn ON SOL-3
                                         pwm_set_dc(1, 80);
@@ -566,6 +573,9 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                                 {
                                                         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                                 }
+
+                                                bldc_start();
+
                                                 // Turn ON SOL-3
                                                 pwm_set_dc(1, 80);
 
@@ -609,6 +619,9 @@ static void exe_thread_func(void *unused1, void *unused2, void *unused3)
                                                 {
                                                         printk("Error: %s %d set failed!\r\n", bldc.port->name, bldc.pin);
                                                 }
+
+                                                bldc_start();
+
                                                 // Turn ON SOL-3
                                                 pwm_set_dc(1, 80);
 
@@ -681,12 +694,16 @@ static void bldc_thread_func(void *unused1, void *unused2, void *unused3)
 
         while(1)
         {
+                // Check status of UART Interface
                 bldc_ping();
                 k_msleep(10);
+                // Check Running Status of BLDC Motor
                 bldc_get_run_stat();
                 k_msleep(10);
+                // Check fault status of BLDC Run (if any)
                 bldc_get_fault();
                 k_msleep(10);
+                // Get Speed (RPM) of the BLDC Motor
                 bldc_get_RPM();
                 k_sleep(K_MSEC(BLDC_SLEEP_TIME));
         }
